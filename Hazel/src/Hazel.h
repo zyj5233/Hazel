@@ -1,8 +1,10 @@
-#pragma once	//确保头文件内容仅被编译一次，避免重复定义错误
+#pragma once
 
-#include <stdio.h>
+// For use by Hazel applications
+#include <iostream>
+
 #include "Hazel/Application.h"
 
-//Enrty point-------------
-#include"Hazel/EnrtyPiont.h"
-//--------------------------
+// ---Entry Point---------------------
+#include "Hazel/EntryPoint.h"
+// -----------------------------------
