@@ -12,8 +12,12 @@ outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
 IncludeDir = {}		--创建一个空的lua表
 IncludeDir["GLFW"] = "Hazel/vendor/GLFW/include"		--把GLWF的路径填进空表
+IncludeDir["Glad"] = "Hazel/vendor/Glad/include"
+IncludeDir["ImGui"] = "Hazel/vendor/imgui"
  
 include "Hazel/vendor/GLFW"		--把一个GLWF的premake导入这个premake
+include "Hazel/vendor/Glad"
+include "Hazel/vendor/imgui"
 
 project "Hazel"		--Hazel项目
 	location "Hazel"--在sln所属文件夹下的Hazel文件夹
@@ -38,12 +42,16 @@ project "Hazel"		--Hazel项目
 	{
 		"%{prj.name}/src",
 		"%{prj.name}/vendor/spdlog/include",
-		"%{IncludeDir.GLFW}"		--把之前表里GLFW的地址添加进搜索列表
+		"%{IncludeDir.GLFW}",		--把之前表里GLFW的地址添加进搜索列表
+		"%{IncludeDir.Glad}",
+		"%{IncludeDir.ImGui}"
 	}
 	
 	links 
  	{ 
  		"GLFW",
+		"Glad",
+		"ImGui",
  		"opengl32.lib"			--windows自带的opengl库
 	}
 	-- 如果是window系统
@@ -56,7 +64,8 @@ project "Hazel"		--Hazel项目
 		-- 预处理器定义
 		defines{
 			"HZ_PLATFORM_WINDOWS",
-			"HZ_BUILD_DLL"
+			"HZ_BUILD_DLL",
+			"GLFW_INCLUDE_NONE"
 		}
 		-- 编译好后移动Hazel.dll文件到Sandbox文件夹下，%{cfg.buildtarget.relpath}是dll的相对路径（就是location），..是回到上一级目录重新进入bin
 		postbuildcommands{
@@ -65,14 +74,17 @@ project "Hazel"		--Hazel项目
 	-- 不同配置下的预定义不同
 	filter "configurations:Debug"
 		defines "HZ_DEBUG"
+		buildoptions "/MDd"
 		symbols "On"
 
 	filter "configurations:Release"
 		defines "HZ_RELEASE"
+		buildoptions "/MD"
 		optimize "On"
 
 	filter "configurations:Dist"
 		defines "HZ_DIST"
+		buildoptions "/MD"
 		optimize "On"
 
 project "Sandbox"
@@ -110,12 +122,15 @@ project "Sandbox"
 
 	filter "configurations:Debug"
 		defines "HZ_DEBUG"              --过滤器，仅在debug配置使用，类似#ifdef HZ_PLATFORM_WINDOWS
+		buildoptions "/MDd"
 		symbols "On"                    --开启用于调试
 
 	filter "configurations:Release"
 		defines "HZ_RELEASE"
+		buildoptions "/MD"
 		optimize "On"                   --开启用于编译器优化，提升性能
 
 	filter "configurations:Dist"
 		defines "HZ_DIST"
+		buildoptions "/MD"
 		optimize "On"
