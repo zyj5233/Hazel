@@ -102,6 +102,14 @@ namespace Hazel {
                 }
             });
 
+        glfwSetCharCallback(m_Window, [](GLFWwindow* window, unsigned int keycode)
+            {
+                WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+
+                KeyTypedEvent event(keycode);
+                data.EventCallback(event);
+            });
+
         glfwSetMouseButtonCallback(m_Window, [](GLFWwindow* window, int button, int action, int mods)
             {
                 WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
@@ -147,7 +155,7 @@ namespace Hazel {
 
     void WindowsWindow::OnUpdate()
     {
-        glfwPollEvents();               // 异步调用注册的回调
+        glfwPollEvents();               // 异步调用注册的回调，包括子层
         glfwSwapBuffers(m_Window);      // 显示画面
     }
 

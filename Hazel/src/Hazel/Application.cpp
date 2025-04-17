@@ -7,12 +7,12 @@
 namespace Hazel {
 
 #define BIND_EVENT_FN(x) std::bind(&Application::x, this, std::placeholders::_1)
-    Application* Application::s_Instance = nullptr;
+    Application* Application::s_Instance = nullptr;     //一次只能有一个实例
 
     Application::Application()
     {     
         HZ_CORE_ASSERT(!s_Instance, "Application already exists!");
-        s_Instance = this;
+        s_Instance = this;      //this指向application实例
 
         //Application创建窗口，控制ui等整体业务逻辑
         m_Window = std::unique_ptr<Window>(Window::Create());
