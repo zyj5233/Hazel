@@ -21,6 +21,8 @@ namespace Hazel {
         inline void SetEventCallback(const EventCallbackFn& callback) override { m_Data.EventCallback = callback; }
         void SetVSync(bool enabled) override;
         bool IsVSync() const override;
+
+        inline virtual void* GetNativeWindow() const { return m_Window; }   //无类型指针，glfw窗口指针
     private:
         virtual void Init(const WindowProps& props);    //初始化和销毁设为虚函数，方便GLWF等窗口重载
         virtual void Shutdown();

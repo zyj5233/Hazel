@@ -72,7 +72,7 @@ project "Hazel"		--Hazel项目
 		}
 		-- 编译好后移动Hazel.dll文件到Sandbox文件夹下，%{cfg.buildtarget.relpath}是dll的相对路径（就是location），..是回到上一级目录重新进入bin
 		postbuildcommands{
-			("{COPY} %{cfg.buildtarget.relpath} ../bin/" .. outputdir .. "/Sandbox")
+			("{COPY} %{cfg.buildtarget.relpath} \"../bin/" .. outputdir .. "/Sandbox/\"")
 		}
 	-- 不同配置下的预定义不同
 	filter "configurations:Debug"

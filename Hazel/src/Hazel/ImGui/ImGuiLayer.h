@@ -19,7 +19,6 @@ namespace Hazel {
         void OnUpdate();
         void OnEvent(Event& event);
     private:
-    private:
         bool OnMouseButtonPressedEvent(MouseButtonPressedEvent& e);
         bool OnMouseButtonReleasedEvent(MouseButtonReleasedEvent& e);
         bool OnMouseMovedEvent(MouseMovedEvent& e);

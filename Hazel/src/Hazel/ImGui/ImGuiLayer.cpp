@@ -96,7 +96,7 @@ namespace Hazel {
 
     bool ImGuiLayer::OnMouseButtonPressedEvent(MouseButtonPressedEvent& e)
     {
-        ImGuiIO& io = ImGui::GetIO();
+        ImGuiIO& io = ImGui::GetIO();       //检测鼠标是否按下，按下就设为true
         io.MouseDown[e.GetMouseButton()] = true;
 
         return false;
@@ -131,8 +131,8 @@ namespace Hazel {
     {
         ImGuiIO& io = ImGui::GetIO();
         io.KeysDown[e.GetKeyCode()] = true;
-
-        io.KeyCtrl = io.KeysDown[GLFW_KEY_LEFT_CONTROL] || io.KeysDown[GLFW_KEY_RIGHT_CONTROL];
+        //下面几个是组合快捷按键，所以特殊设置
+        io.KeyCtrl = io.KeysDown[GLFW_KEY_LEFT_CONTROL] || io.KeysDown[GLFW_KEY_RIGHT_CONTROL];    
         io.KeyShift = io.KeysDown[GLFW_KEY_LEFT_SHIFT] || io.KeysDown[GLFW_KEY_RIGHT_SHIFT];
         io.KeyAlt = io.KeysDown[GLFW_KEY_LEFT_ALT] || io.KeysDown[GLFW_KEY_RIGHT_ALT];
         io.KeySuper = io.KeysDown[GLFW_KEY_LEFT_SUPER] || io.KeysDown[GLFW_KEY_RIGHT_SUPER];
@@ -152,7 +152,7 @@ namespace Hazel {
         ImGuiIO& io = ImGui::GetIO();
         int keycode = e.GetKeyCode();
         if (keycode > 0 && keycode < 0x10000)
-            io.AddInputCharacter((unsigned short)keycode);
+            io.AddInputCharacter((unsigned short)keycode);      //存到缓冲区
 
         return false;
     }
@@ -160,9 +160,9 @@ namespace Hazel {
     bool ImGuiLayer::OnWindowResizeEvent(WindowResizeEvent& e)
     {
         ImGuiIO& io = ImGui::GetIO();
-        io.DisplaySize = ImVec2(e.GetWidth(), e.GetHeight());
+        io.DisplaySize = ImVec2(e.GetWidth(), e.GetHeight());  //可以让 ImGui 知道当前显示区域的大小，从而正确地布局和渲染界面元素。
         io.DisplayFramebufferScale = ImVec2(1.0f, 1.0f);
-        glViewport(0, 0, e.GetWidth(), e.GetHeight());
+        glViewport(0, 0, e.GetWidth(), e.GetHeight());      //这样可以确保 OpenGL 渲染的内容填满整个窗口。
 
         return false;
     }
