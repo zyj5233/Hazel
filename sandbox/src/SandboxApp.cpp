@@ -1,5 +1,7 @@
 #include <Hazel.h>
 
+#include "imgui/imgui.h"
+
 class ExampleLayer : public Hazel::Layer
 {
 public:
@@ -10,12 +12,25 @@ public:
 
     void OnUpdate() override        //sandboxapp层级
     {
-        HZ_INFO("ExampleLayer::Update");
+        if (Hazel::Input::IsKeyPressed(HZ_KEY_A))
+            HZ_TRACE("A key is pressed (poll)!");
     }
+    //virtual void OnImGuiRender() override
+    //{
+    //    ImGui::Begin("Test");
+    //    ImGui::Text("Hello World");
+    //    ImGui::End();
+    //}
 
     void OnEvent(Hazel::Event& event) override
     {
-        HZ_TRACE("{0}", event.ToString()); 
+        if (event.GetEventType() == Hazel::EventType::KeyPressed)
+        {
+            Hazel::KeyPressedEvent& e = (Hazel::KeyPressedEvent&)event;     //将基类 Event 引用转换为派生类 KeyPressedEvent 引用
+            if (e.GetKeyCode() == HZ_KEY_TAB)
+                HZ_TRACE("Tab key is pressed (event)!");
+            HZ_TRACE("{0}", (char)e.GetKeyCode());
+        }
     }
 
 };
@@ -26,7 +41,6 @@ public:
     Sandbox()
     {
         PushLayer(new ExampleLayer());      //创建一个example的实例压入栈
-        PushOverlay(new Hazel::ImGuiLayer());
     }
 
     ~Sandbox()

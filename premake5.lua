@@ -16,7 +16,8 @@ IncludeDir = {}		--创建一个空的lua表
 IncludeDir["GLFW"] = "Hazel/vendor/GLFW/include"		--把GLWF的路径填进空表
 IncludeDir["Glad"] = "Hazel/vendor/Glad/include"
 IncludeDir["ImGui"] = "Hazel/vendor/imgui"
- 
+IncludeDir["glm"] = "Hazel/vendor/glm"
+
 include "Hazel/vendor/GLFW"		--把一个GLWF的premake导入这个premake
 include "Hazel/vendor/Glad"
 include "Hazel/vendor/imgui"
@@ -38,7 +39,9 @@ project "Hazel"		--Hazel项目
 	files
 	{
 		"%{prj.name}/src/**.h",
-		"%{prj.name}/src/**.cpp"
+		"%{prj.name}/src/**.cpp",
+		"%{prj.name}/vendor/glm/glm/**.hpp",
+		"%{prj.name}/vendor/glm/glm/**.inl",
 	}
 	-- 包含头文件，以便能够跨文件读取，就是Additional Include Directories中的配置
 	includedirs
@@ -47,7 +50,8 @@ project "Hazel"		--Hazel项目
 		"%{prj.name}/vendor/spdlog/include",
 		"%{IncludeDir.GLFW}",		--把之前表里GLFW的地址添加进搜索列表
 		"%{IncludeDir.Glad}",
-		"%{IncludeDir.ImGui}"
+		"%{IncludeDir.ImGui}",
+ 		"%{IncludeDir.glm}"
 	}
 	
 	links 
@@ -106,7 +110,9 @@ project "Sandbox"
 	-- 同样包含spdlog头文件
 	includedirs{
 		"Hazel/vendor/spdlog/include",
-		"Hazel/src"
+		"Hazel/src",
+		"Hazel/vendor",
+		"%{IncludeDir.glm}"
 	}
 	-- 引用hazel
 	links

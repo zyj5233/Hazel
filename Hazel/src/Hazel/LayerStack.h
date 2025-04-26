@@ -22,7 +22,7 @@ namespace Hazel {
         std::vector<Layer*>::iterator end() { return m_Layers.end(); }
     private:
         std::vector<Layer*> m_Layers;       //存储指向层的指针
-        std::vector<Layer*>::iterator m_LayerInsert;        //区分覆盖层和普通层之间的书签
+        unsigned int m_LayerInsertIndex = 0;        //更高效
     };
 
 }

@@ -7,6 +7,8 @@
 #include "Hazel/Events/Event.h"
 #include "Hazel/Events/ApplicationEvent.h"
 
+#include "Hazel/ImGui/ImGuiLayer.h"
+
 namespace Hazel {
 
     class HAZEL_API Application
@@ -29,6 +31,7 @@ namespace Hazel {
 
         bool OnWindowClose(WindowCloseEvent& e);
         std::unique_ptr<Window> m_Window;       //智能指针管理，同一时间只能管理一个窗口，m_Window是一个指针
+        ImGuiLayer* m_ImGuiLayer;
         bool m_Running = true;
         LayerStack m_LayerStack;
 
