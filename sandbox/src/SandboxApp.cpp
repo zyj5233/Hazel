@@ -15,12 +15,12 @@ public:
         if (Hazel::Input::IsKeyPressed(HZ_KEY_A))
             HZ_TRACE("A key is pressed (poll)!");
     }
-    //virtual void OnImGuiRender() override
-    //{
-    //    ImGui::Begin("Test");
-    //    ImGui::Text("Hello World");
-    //    ImGui::End();
-    //}
+    virtual void OnImGuiRender() override
+    {
+        ImGui::Begin("Test");
+        ImGui::Text("Hello World");
+        ImGui::End();
+    }
 
     void OnEvent(Hazel::Event& event) override
     {

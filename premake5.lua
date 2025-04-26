@@ -24,9 +24,10 @@ include "Hazel/vendor/imgui"
 
 project "Hazel"		--Hazel项目
 	location "Hazel"--在sln所属文件夹下的Hazel文件夹
-	kind "SharedLib"--dll动态库
+	kind "StaticLib"--dll动态库
 	language "C++"
-	staticruntime "Off"	
+	cppdialect "C++17"
+	staticruntime "on"	
 
 	targetdir ("bin/" .. outputdir .. "/%{prj.name}") -- 输出目录（bin/debug-windows-x86_64/Hazel）
 	objdir ("bin-int/" .. outputdir .. "/%{prj.name}")-- 中间目录
@@ -43,6 +44,12 @@ project "Hazel"		--Hazel项目
 		"%{prj.name}/vendor/glm/glm/**.hpp",
 		"%{prj.name}/vendor/glm/glm/**.inl",
 	}
+
+	defines
+	{
+		"_CRT_SECURE_NO_WARNINGS"
+	}
+	
 	-- 包含头文件，以便能够跨文件读取，就是Additional Include Directories中的配置
 	includedirs
 	{
@@ -63,7 +70,6 @@ project "Hazel"		--Hazel项目
 	}
 	-- 如果是window系统
 	filter "system:windows"
-		cppdialect "C++17"
 		-- On:代码生成的运行库选项是MTD,静态链接MSVCRT.lib库;
 		-- Off:代码生成的运行库选项是MDD,动态链接MSVCRT.dll库;打包后的exe放到另一台电脑上若无这个dll会报错
 
@@ -74,31 +80,29 @@ project "Hazel"		--Hazel项目
 			"HZ_BUILD_DLL",
 			"GLFW_INCLUDE_NONE"
 		}
-		-- 编译好后移动Hazel.dll文件到Sandbox文件夹下，%{cfg.buildtarget.relpath}是dll的相对路径（就是location），..是回到上一级目录重新进入bin
-		postbuildcommands{
-			("{COPY} %{cfg.buildtarget.relpath} \"../bin/" .. outputdir .. "/Sandbox/\"")
-		}
+
 	-- 不同配置下的预定义不同
 	filter "configurations:Debug"
 		defines "HZ_DEBUG"
 		runtime "Debug"
-		symbols "On"
+		symbols "on"
 
 	filter "configurations:Release"
 		defines "HZ_RELEASE"
 		runtime "Release"
-		optimize "On"
+		optimize "on"
 
 	filter "configurations:Dist"
 		defines "HZ_DIST"
 		runtime "Release"
-		optimize "On"
+		optimize "on"
 
 project "Sandbox"
 	location "Sandbox"
 	kind "ConsoleApp"
 	language "C++"
-	staticruntime "off"
+	cppdialect "C++17"
+	staticruntime "on"
 
 	targetdir ("bin/" .. outputdir .. "/%{prj.name}")
 	objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
@@ -121,7 +125,6 @@ project "Sandbox"
 	}
 
 	filter "system:windows"
-		cppdialect "C++17"
 
 		systemversion "latest"
 
@@ -133,14 +136,14 @@ project "Sandbox"
 	filter "configurations:Debug"
 		defines "HZ_DEBUG"              --过滤器，仅在debug配置使用，类似#ifdef HZ_PLATFORM_WINDOWS
 		runtime "Debug"
-		symbols "On"                    --开启用于调试
+		symbols "on"                    --开启用于调试
 
 	filter "configurations:Release"
 		defines "HZ_RELEASE"
 		runtime "Release"
-		optimize "On"                   --开启用于编译器优化，提升性能
+		optimize "on"                   --开启用于编译器优化，提升性能
 
 	filter "configurations:Dist"
 		defines "HZ_DIST"
 		runtime "Release"
-		optimize "On"
+		optimize "on"
