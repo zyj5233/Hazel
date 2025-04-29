@@ -22,15 +22,15 @@ namespace Hazel {
         m_ImGuiLayer = new ImGuiLayer();
         PushOverlay(m_ImGuiLayer);
 
-        glGenVertexArrays(1, &m_VertexArray);       //创建vao，绘图配方
+        glGenVertexArrays(1, &m_VertexArray);       //创建vao，绘图配方，vertex和vertices都是顶点的意思
         glBindVertexArray(m_VertexArray);           //绑定为当前操作对象
 
         glGenBuffers(1, &m_VertexBuffer);           //创建vbo，原料仓库
         glBindBuffer(GL_ARRAY_BUFFER, m_VertexBuffer);  //绑定到GL_ARRAY_BUFFER
 
         float vertices[3 * 3] = {
-            -1.0f, 0.0f, 0.0f,     //左下角（x，y，z）
-             1.0f, 0.0f, 0.0f,     //右下角
+            -0.5f, -0.5f, 0.0f,     //左下角（x，y，z）
+             0.5f, -0.5f, 0.0f,     //右下角
              0.0f,  0.5f, 0.0f      //顶点
         };
         
@@ -48,8 +48,36 @@ namespace Hazel {
         //索引数组和传递索引数组
         unsigned int indices[3] = { 0, 1, 2 };
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-    }
+        std::string vertexSrc = R"(
+ 			#version 330 core
+ 			
+ 			layout(location = 0) in vec3 a_Position;
+ 
+ 			out vec3 v_Position;
+ 
+ 			void main()
+ 			{
+ 				v_Position = a_Position;
+ 				gl_Position = vec4(a_Position, 1.0);	
+ 			}
+ 		)";
 
+        std::string fragmentSrc = R"(
+ 			#version 330 core
+ 			
+ 			layout(location = 0) out vec4 color;
+ 
+ 			in vec3 v_Position;
+ 
+ 			void main()
+ 			{
+ 				color = vec4(v_Position * 0.5 + 0.5, 1.0);
+ 			}
+ 		)";
+
+        m_Shader.reset(new Shader(vertexSrc, fragmentSrc));
+
+    }
 
     Application::~Application()
     {
@@ -86,6 +114,8 @@ namespace Hazel {
         {
             glClearColor(0.1f, 0.1f, 0.1f, 1);       //窗口颜色
             glClear(GL_COLOR_BUFFER_BIT);
+
+            m_Shader->Bind();
 
             //方便多个vao切换
             glBindVertexArray(m_VertexArray);
