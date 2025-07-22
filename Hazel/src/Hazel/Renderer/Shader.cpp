@@ -10,57 +10,61 @@ namespace Hazel {
         // 创建空顶点着色器句柄
         GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
 
-        // Send the vertex shader source code to GL
-        // Note that std::string's .c_str is NULL character terminated.
+        // 顶点着色器源代码转换成c风格
+        // 源码传给OpenGL的顶点着色器对象vertexshader
         const GLchar* source = vertexSrc.c_str();
         glShaderSource(vertexShader, 1, &source, 0);
 
-        // Compile the vertex shader
+        // 编译源码
         glCompileShader(vertexShader);
 
-        GLint isCompiled = 0;
-        glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &isCompiled);
-        if (isCompiled == GL_FALSE)
+        GLint isCompiled = 0;       
+        glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &isCompiled);    //查询着色器对象信息
+        if (isCompiled == GL_FALSE)     //如果编译失败
         {
-            GLint maxLength = 0;
+            //获取错误信息的长度
+            GLint maxLength = 0;        
             glGetShaderiv(vertexShader, GL_INFO_LOG_LENGTH, &maxLength);
 
-            // The maxLength includes the NULL character
+            // 创建足够大的向量存储错误信息
             std::vector<GLchar> infoLog(maxLength);
+            //获取详细的错误信息
             glGetShaderInfoLog(vertexShader, maxLength, &maxLength, &infoLog[0]);
 
-            // We don't need the shader anymore.
+            // 删除不再需要的着色器对象
             glDeleteShader(vertexShader);
 
+            //输出错误信息到日志
             HZ_CORE_ERROR("{0}", infoLog.data());
+            //触发断言，终止程序并输出错误提示
             HZ_CORE_ASSERT(false, "Vertex shader compilation failure!");
             return;
         }
 
-        // Create an empty fragment shader handle
+        // 创建片段着色器句柄
         GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
 
-        // Send the fragment shader source code to GL
-        // Note that std::string's .c_str is NULL character terminated.
+        // 获取源码并转为c语言风格
+        // 传给OpenGL的片段着色器fragmentShader
         source = fragmentSrc.c_str();
         glShaderSource(fragmentShader, 1, &source, 0);
 
-        // Compile the fragment shader
+        // 编译源码
         glCompileShader(fragmentShader);
 
-        glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &isCompiled);
-        if (isCompiled == GL_FALSE)
+        glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &isCompiled);      //获取编译信息
+        if (isCompiled == GL_FALSE)     //如果编译失败
         {
+            //获取错误长度
             GLint maxLength = 0;
             glGetShaderiv(fragmentShader, GL_INFO_LOG_LENGTH, &maxLength);
 
-            // The maxLength includes the NULL character
+            
             std::vector<GLchar> infoLog(maxLength);
             glGetShaderInfoLog(fragmentShader, maxLength, &maxLength, &infoLog[0]);
 
-            // We don't need the shader anymore.
+            
             glDeleteShader(fragmentShader);
-            // Either of them. Don't leak shaders.
             glDeleteShader(vertexShader);
 
             HZ_CORE_ERROR("{0}", infoLog.data());
@@ -68,34 +72,32 @@ namespace Hazel {
             return;
         }
 
-        // Vertex and fragment shaders are successfully compiled.
-        // Now time to link them together into a program.
-        // Get a program object.
+        // 创建一个新的着色器对象，并把句柄给m_RendererID
+        //同时用临时变量program方便后续操作
         m_RendererID = glCreateProgram();
         GLuint program = m_RendererID;
 
-        // Attach our shaders to our program
+        // 将顶点着色器和片段着色器附加到程序上
         glAttachShader(program, vertexShader);
         glAttachShader(program, fragmentShader);
 
-        // Link our program
+        // 会将各个着色器的代码组合成一个单一的、可在 GPU 上执行的程序
         glLinkProgram(program);
 
-        // Note the different functions here: glGetProgram* instead of glGetShader*.
+        //是否链接成功
         GLint isLinked = 0;
-        glGetProgramiv(program, GL_LINK_STATUS, (int*)&isLinked);
+        glGetProgramiv(program, GL_LINK_STATUS, &isLinked);
         if (isLinked == GL_FALSE)
         {
             GLint maxLength = 0;
             glGetProgramiv(program, GL_INFO_LOG_LENGTH, &maxLength);
 
-            // The maxLength includes the NULL character
+            
             std::vector<GLchar> infoLog(maxLength);
             glGetProgramInfoLog(program, maxLength, &maxLength, &infoLog[0]);
 
-            // We don't need the program anymore.
+            
             glDeleteProgram(program);
-            // Don't leak shaders either.
             glDeleteShader(vertexShader);
             glDeleteShader(fragmentShader);
 
@@ -104,13 +106,14 @@ namespace Hazel {
             return;
         }
 
-        // Always detach shaders after a successful link.
+        // 成功后deteach
         glDetachShader(program, vertexShader);
         glDetachShader(program, fragmentShader);
     }
 
     Shader::~Shader()
     {
+        //析构函数只释放c++对象，不释放OpenGL对象
         glDeleteProgram(m_RendererID);
     }
 

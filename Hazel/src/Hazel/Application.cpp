@@ -25,58 +25,55 @@ namespace Hazel {
         glGenVertexArrays(1, &m_VertexArray);       //创建vao，绘图配方，vertex和vertices都是顶点的意思
         glBindVertexArray(m_VertexArray);           //绑定为当前操作对象
 
-        glGenBuffers(1, &m_VertexBuffer);           //创建vbo，原料仓库
-        glBindBuffer(GL_ARRAY_BUFFER, m_VertexBuffer);  //绑定到GL_ARRAY_BUFFER
-
         float vertices[3 * 3] = {
-            -0.5f, -0.5f, 0.0f,     //左下角（x，y，z）
-             0.5f, -0.5f, 0.0f,     //右下角
-             0.0f,  0.5f, 0.0f      //顶点
+            -0.5f, -0.5f, 0.0f, //1.0f, 0.0f, 0.0f,    //左下角（x，y，z），红色
+             0.5f, -0.5f, 0.0f, //0.0f, 1.0f, 0.0f,    //右下角，绿色
+             0.0f,  0.5f, 0.0f  //0.0f, 0.0f, 1.0f     //顶点，蓝色
         };
-        
-        //数据传到vbo
-        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);      //静态数据静态绘制
+        //-reset指针的作用：释放 m_IndexBuffer 之前可能指向的旧索引缓冲对象
+        //-接管 IndexBuffer::Create(...) 返回的新索引缓冲对象指针
+        // - 确保资源在 m_IndexBuffer 生命周期结束时自动释放
+        m_VertexBuffer.reset(VertexBuffer::Create(vertices, sizeof(vertices)));
 
-        //取数据
+        //位置属性，0是顶点属性的位置，3表明是三维向量，浮点型和不归一化，在后面是步长，也就是说先取三个数据（三维），然后根据步长，假如步长是6，就跳过三个接着取，nullptr表示没有偏移从第一个取
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
-        glEnableVertexAttribArray(0);
+        glEnableVertexAttribArray(0);       //启用数组里面的索引0
+        //颜色属性，(void*)(3 * sizeof(float))表示偏移三个从第四个取
+        //glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+        //glEnableVertexAttribArray(1);     //启用数组里面的索引1
+ 
+        uint32_t indices[3] = { 0, 1, 2 };
+        m_IndexBuffer.reset(IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32_t)));
 
-        //ibo索引
-        glGenBuffers(1, &m_IndexBuffer);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_IndexBuffer);
-
-        //索引数组和传递索引数组
-        unsigned int indices[3] = { 0, 1, 2 };
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
         std::string vertexSrc = R"(
  			#version 330 core
  			
- 			layout(location = 0) in vec3 a_Position;
- 
+ 			layout(location = 0) in vec3 a_Position;    
  			out vec3 v_Position;
  
  			void main()
  			{
- 				v_Position = a_Position;
- 				gl_Position = vec4(a_Position, 1.0);	
+                v_Position = a_Position;	
+ 				gl_Position = vec4(a_Position, 1.0);
+ 
  			}
  		)";
 
         std::string fragmentSrc = R"(
  			#version 330 core
- 			
+
  			layout(location = 0) out vec4 color;
- 
+
  			in vec3 v_Position;
- 
+
  			void main()
  			{
  				color = vec4(v_Position * 0.5 + 0.5, 1.0);
  			}
  		)";
 
+        //创建一个shader对象
         m_Shader.reset(new Shader(vertexSrc, fragmentSrc));
-
     }
 
     Application::~Application()
@@ -115,11 +112,12 @@ namespace Hazel {
             glClearColor(0.1f, 0.1f, 0.1f, 1);       //窗口颜色
             glClear(GL_COLOR_BUFFER_BIT);
 
+            //激活着色器
             m_Shader->Bind();
 
             //方便多个vao切换
             glBindVertexArray(m_VertexArray);
-            glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, nullptr);      //绘制三角形，3个索引数量，索引int型
+            glDrawElements(GL_TRIANGLES, m_IndexBuffer->GetCount(), GL_UNSIGNED_INT, nullptr);
 
             for (Layer* layer : m_LayerStack)
                 layer->OnUpdate();      //是层级的onupdata，处理onupdata
