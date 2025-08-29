@@ -9,29 +9,6 @@ namespace Hazel {
 #define BIND_EVENT_FN(x) std::bind(&Application::x, this, std::placeholders::_1)
     Application* Application::s_Instance = nullptr;     //一次只能有一个实例
 
-    //GLenum 是 OpenGL 定义的 枚举类型，这个函数把ShaderDataType转换成GLenum
-    static GLenum ShaderDataTypeToOpenGLBaseType(ShaderDataType type)
-    {
-        switch (type)
-        {
-        case Hazel::ShaderDataType::Float:    return GL_FLOAT;
-        case Hazel::ShaderDataType::Float2:   return GL_FLOAT;
-        case Hazel::ShaderDataType::Float3:   return GL_FLOAT;
-        case Hazel::ShaderDataType::Float4:   return GL_FLOAT;
-        case Hazel::ShaderDataType::Mat3:     return GL_FLOAT;
-        case Hazel::ShaderDataType::Mat4:     return GL_FLOAT;
-        case Hazel::ShaderDataType::Int:      return GL_INT;
-        case Hazel::ShaderDataType::Int2:     return GL_INT;
-        case Hazel::ShaderDataType::Int3:     return GL_INT;
-        case Hazel::ShaderDataType::Int4:     return GL_INT;
-        case Hazel::ShaderDataType::Bool:     return GL_BOOL;
-        }
-
-        //如果没有switch匹配就触发断言保护
-        HZ_CORE_ASSERT(false, "Unknown ShaderDataType!");
-        return 0;
-    }
-
     Application::Application()
     {     
         HZ_CORE_ASSERT(!s_Instance, "Application already exists!");
@@ -45,20 +22,17 @@ namespace Hazel {
         m_ImGuiLayer = new ImGuiLayer();
         PushOverlay(m_ImGuiLayer);
 
-        glGenVertexArrays(1, &m_VertexArray);       //创建vao，绘图配方，vertex和vertices都是顶点的意思
-        glBindVertexArray(m_VertexArray);           //绑定为当前操作对象
+        m_VertexArray.reset(VertexArray::Create());
 
         float vertices[3 * 7] = {
-            //前面三个是float3，xyz坐标
-            //后面四个是float4.rgba值
+            //这是客户端数据，也叫数据源
             -0.5f, -0.5f, 0.0f, 0.8f, 0.2f, 0.8f, 1.0f,
              0.5f, -0.5f, 0.0f, 0.2f, 0.3f, 0.8f, 1.0f,
              0.0f,  0.5f, 0.0f, 0.8f, 0.8f, 0.2f, 1.0f
         };
-        //-reset指针的作用：释放 m_VertexBuffer 之前可能指向的旧顶点缓冲对象
-        //-接管 IndexBuffer::Create(...) 返回的新索引缓冲对象指针
-        // - 确保资源在 m_VertexBuffer 生命周期结束时自动释放
-        m_VertexBuffer.reset(VertexBuffer::Create(vertices, sizeof(vertices)));
+
+        std::shared_ptr<VertexBuffer> vertexBuffer;     
+        vertexBuffer.reset(VertexBuffer::Create(vertices, sizeof(vertices)));       //让vertexBuffer指针管理vbo
         
         //花括号是代码块限定layout的作用域
         {
@@ -69,27 +43,36 @@ namespace Hazel {
                 { ShaderDataType::Float4, "a_Color" }
             };
 
-            m_VertexBuffer->SetLayout(layout);
-        }
-
-        uint32_t index = 0;     //位置索引
-        const auto& layout = m_VertexBuffer->GetLayout();
-        for (const auto& element : layout)
-        {
-            glEnableVertexAttribArray(index);       //OpenGL 默认会禁用所有顶点属性索引，这行代码显式启用索引为index的顶点属性
-           // 建立cpu与gpu之间的映射关系。
-            glVertexAttribPointer(index,
-                element.GetComponentCount(),
-                ShaderDataTypeToOpenGLBaseType(element.Type),
-                element.Normalized ? GL_TRUE : GL_FALSE,        //是否归一化数据
-                layout.GetStride(),
-                (const void*)element.Offset);       //属性在顶点数据中的偏移量
-            index++;
+            vertexBuffer->SetLayout(layout);        //把布局信息存储到vertexBuffer对象中
+            m_VertexArray->AddVertexBuffer(vertexBuffer);   //vertexBuffer指向OpenGLVertexBuffer对象，所以可以调用m_RendererID
         }
 
         uint32_t indices[3] = { 0, 1, 2 };
-        m_IndexBuffer.reset(IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32_t)));
+        std::shared_ptr<IndexBuffer> indexBuffer;
+        indexBuffer.reset(IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32_t)));
+        m_VertexArray->SetIndexBuffer(indexBuffer);
+        m_SquareVA.reset(VertexArray::Create());
 
+        float squareVertices[3 * 4] = {
+            -0.75f, -0.75f, 0.0f,
+             0.75f, -0.75f, 0.0f,
+             0.75f,  0.75f, 0.0f,
+            -0.75f,  0.75f, 0.0f
+        };
+
+        std::shared_ptr<VertexBuffer> squareVB;
+        squareVB.reset(VertexBuffer::Create(squareVertices, sizeof(squareVertices)));
+        squareVB->SetLayout({
+            { ShaderDataType::Float3, "a_Position" }
+            });
+        m_SquareVA->AddVertexBuffer(squareVB);
+
+        uint32_t squareIndices[6] = { 0, 1, 2, 2, 3, 0 };
+        std::shared_ptr<IndexBuffer> squareIB;
+        squareIB.reset(IndexBuffer::Create(squareIndices, sizeof(squareIndices) / sizeof(uint32_t)));
+        m_SquareVA->SetIndexBuffer(squareIB);
+
+        //通过 layout(location) 指定索引0和1
         std::string vertexSrc = R"(
  			#version 330 core
  			
@@ -123,6 +106,35 @@ namespace Hazel {
 
         //创建一个shader对象
         m_Shader.reset(new Shader(vertexSrc, fragmentSrc));
+        std::string blueShaderVertexSrc = R"(
+			#version 330 core
+			
+			layout(location = 0) in vec3 a_Position;
+
+			out vec3 v_Position;
+
+			void main()
+			{
+				v_Position = a_Position;
+				gl_Position = vec4(a_Position, 1.0);	
+			}
+		)";
+
+        std::string blueShaderFragmentSrc = R"(
+			#version 330 core
+			
+			layout(location = 0) out vec4 color;
+
+			in vec3 v_Position;
+
+			void main()
+			{
+				color = vec4(0.2, 0.3, 0.8, 1.0);
+			}
+		)";
+
+        m_BlueShader.reset(new Shader(blueShaderVertexSrc, blueShaderFragmentSrc));
+
     }
 
     Application::~Application()
@@ -161,17 +173,19 @@ namespace Hazel {
             glClearColor(0.1f, 0.1f, 0.1f, 1);       //窗口颜色
             glClear(GL_COLOR_BUFFER_BIT);
 
+            m_BlueShader->Bind();
+            m_SquareVA->Bind();
+            glDrawElements(GL_TRIANGLES, m_SquareVA->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
+
             //激活着色器
             m_Shader->Bind();
 
-            //方便多个vao切换
-            glBindVertexArray(m_VertexArray);
-            glDrawElements(GL_TRIANGLES, m_IndexBuffer->GetCount(), GL_UNSIGNED_INT, nullptr);
+            m_VertexArray->Bind();
+            glDrawElements(GL_TRIANGLES, m_VertexArray->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
 
             for (Layer* layer : m_LayerStack)
                 layer->OnUpdate();      //是层级的onupdata，处理onupdata
 
-            m_ImGuiLayer->Begin();
             for (Layer* layer : m_LayerStack)
                 layer->OnImGuiRender();
             m_ImGuiLayer->End();

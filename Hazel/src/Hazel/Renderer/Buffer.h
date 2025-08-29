@@ -32,15 +32,15 @@ namespace Hazel {
 
 	struct BufferElement
 	{
-		std::string Name;
-		ShaderDataType Type;
-		uint32_t Size;
-		uint32_t Offset;
-		bool Normalized;
+		std::string Name;		//属性名称（如 "a_Position"）
+		ShaderDataType Type;	// 数据类型（如 Float3, Float4）
+		uint32_t Size;		// 数据大小（字节数）
+		uint32_t Offset;		// 在顶点中的偏移量（字节）
+		bool Normalized;		// 是否应该被归一化
 
 		BufferElement() {}
 
-		BufferElement(ShaderDataType type, const std::string& name, bool normalized = false)
+		BufferElement(ShaderDataType type, const std::string& name, bool normalized = false)		//它定义的容器可以接收type，name的参数
 			: Name(name), Type(type), Size(ShaderDataTypeSize(type)), Offset(0), Normalized(normalized)
 		{
 		}
@@ -67,7 +67,7 @@ namespace Hazel {
 		}
 	};
 
-	class BufferLayout
+	class BufferLayout		//由于定义了这个std::vector<BufferElement> m_Elements容器，这个类的实例也能接收BufferElement构造函数可以接收的参数（可以跳转过去看）
 	{
 	public:
 		BufferLayout() {}
@@ -91,7 +91,7 @@ namespace Hazel {
 		{
 			uint32_t offset = 0;		//当前属性在顶点数据中的起始位置
 			m_Stride = 0;			//单个顶点的总字节数
-			for (auto& element : m_Elements)		//遍历循环每个属性
+			for (auto& element : m_Elements)		//循环遍历容器
 			{
 				element.Offset = offset;
 				offset += element.Size;
@@ -103,7 +103,7 @@ namespace Hazel {
 		uint32_t m_Stride = 0;		//步长
 	};
 
-	class VertexBuffer
+	class VertexBuffer		//叫他vbo也没问题，因为它和真正的vbo紧密联系
 	{
 	public:
 		virtual ~VertexBuffer() {}

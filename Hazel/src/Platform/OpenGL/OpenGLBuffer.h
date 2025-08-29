@@ -17,7 +17,7 @@ namespace Hazel {
 		virtual void SetLayout(const BufferLayout& layout) override { m_Layout = layout; }
 	private:
 		uint32_t m_RendererID;
-		BufferLayout m_Layout;
+		BufferLayout m_Layout;		//存储在OpenGLVertexBuffer对象里面，可以被父指针调用
 	};
 
 	class OpenGLIndexBuffer : public IndexBuffer

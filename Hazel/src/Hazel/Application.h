@@ -10,6 +10,8 @@
 #include "Hazel/ImGui/ImGuiLayer.h"
 #include "Hazel/Renderer/Shader.h"
 #include "Hazel/Renderer/Buffer.h"
+#include "Hazel/Renderer/VertexArray.h"
+
 namespace Hazel {
 
     class HAZEL_API Application
@@ -35,10 +37,13 @@ namespace Hazel {
         ImGuiLayer* m_ImGuiLayer;
         bool m_Running = true;
         LayerStack m_LayerStack;
-        unsigned int m_VertexArray;
-        std::unique_ptr<Shader> m_Shader;       //管理着色器，把权力给application
-        std::unique_ptr<VertexBuffer> m_VertexBuffer;
-        std::unique_ptr<IndexBuffer> m_IndexBuffer;
+
+        std::shared_ptr<Shader> m_Shader;
+        std::shared_ptr<VertexArray> m_VertexArray;
+
+        std::shared_ptr<Shader> m_BlueShader;
+        std::shared_ptr<VertexArray> m_SquareVA;
+
     private:
         static Application* s_Instance;
     };
