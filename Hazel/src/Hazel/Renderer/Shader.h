@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <glm/glm.hpp>
 
 namespace Hazel {
 
@@ -12,6 +13,10 @@ namespace Hazel {
 
         void Bind() const;      //激活着色器
         void Unbind() const;    //解绑着色器
+
+        void UploadUniformMat4(const std::string& name, const glm::mat4& matrix);
+
+
     private:
         uint32_t m_RendererID;      //着色器唯一id
     };

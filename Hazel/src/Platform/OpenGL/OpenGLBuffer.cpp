@@ -31,11 +31,12 @@ namespace Hazel {
 	}
 
 
-	OpenGLIndexBuffer::OpenGLIndexBuffer(uint32_t* indices, uint32_t count)
-		: m_Count(count)
+	OpenGLIndexBuffer::OpenGLIndexBuffer(uint32_t* indices, uint32_t count)		
+		: m_Count(count)		//索引数量
 	{
-		glCreateBuffers(1, &m_RendererID);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_RendererID);
+		glCreateBuffers(1, &m_RendererID);		//虽然代码相同，但其实这里是创建ibo
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_RendererID);	//GL_ELEMENT_ARRAY_BUFFER存储顶点索引数据
+		//下面不仅指明了数据的总字节和指针，还说明了数据类型uint32_t
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, count * sizeof(uint32_t), indices, GL_STATIC_DRAW);
 	}
 

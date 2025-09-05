@@ -55,21 +55,23 @@ namespace Hazel {
 		vertexBuffer->Bind();
 
 		uint32_t index = 0;
-		const auto& layout = vertexBuffer->GetLayout();
+		const auto& layout = vertexBuffer->GetLayout();		//获取layout
 		for (const auto& element : layout)
 		{
-			glEnableVertexAttribArray(index);
+			glEnableVertexAttribArray(index);		//启用index通道
+			//下面的index对应location（n）
 			glVertexAttribPointer(index,		//vao，顶点数组对象，也是映射规则，告诉gpu如何解析vbo中的顶点数据
-				element.GetComponentCount(),
-				ShaderDataTypeToOpenGLBaseType(element.Type),
-				element.Normalized ? GL_TRUE : GL_FALSE,
-				layout.GetStride(),
-				(const void*)element.Offset);
+				element.GetComponentCount(),		//向量维数
+				ShaderDataTypeToOpenGLBaseType(element.Type),	//传为OpenGL类型
+				element.Normalized ? GL_TRUE : GL_FALSE,		//是否归一化
+				layout.GetStride(),		//获取步长
+				(const void*)element.Offset);		//获取偏移量
 			index++;
 		}
 		m_VertexBuffers.push_back(vertexBuffer);
 	}
 
+	//实现vao与ibo的绑定
 	void OpenGLVertexArray::SetIndexBuffer(const std::shared_ptr<IndexBuffer>& indexBuffer)
 	{
 		glBindVertexArray(m_RendererID);

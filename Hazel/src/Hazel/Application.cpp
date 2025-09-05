@@ -1,15 +1,20 @@
 #include "hzpch.h"      //需要与premake里面的pchheader "hzpch.h"一致
 
 #include "Application.h"
+
 #include "Hazel/Log.h"
+
+#include "Hazel/Renderer/Renderer.h"
 #include "Input.h"
-#include "glad/glad.h"
-namespace Hazel {
+
+
+namespace Hazel { 
 
 #define BIND_EVENT_FN(x) std::bind(&Application::x, this, std::placeholders::_1)
     Application* Application::s_Instance = nullptr;     //一次只能有一个实例
 
     Application::Application()
+        :m_Camera(-1.6f, 1.6f, -0.9f, 0.9f)
     {     
         HZ_CORE_ASSERT(!s_Instance, "Application already exists!");
         s_Instance = this;      //this指向application实例
@@ -22,7 +27,7 @@ namespace Hazel {
         m_ImGuiLayer = new ImGuiLayer();
         PushOverlay(m_ImGuiLayer);
 
-        m_VertexArray.reset(VertexArray::Create());
+        m_VertexArray.reset(VertexArray::Create());     //创建三角形vao
 
         float vertices[3 * 7] = {
             //这是客户端数据，也叫数据源
@@ -34,7 +39,7 @@ namespace Hazel {
         std::shared_ptr<VertexBuffer> vertexBuffer;     
         vertexBuffer.reset(VertexBuffer::Create(vertices, sizeof(vertices)));       //让vertexBuffer指针管理vbo
         
-        //花括号是代码块限定layout的作用域
+        //花括号是代码块限定layout的作用域，目的只是给m_layout传值，结束后自动销毁
         {
             //说明书：告诉顶点由三个位置和四个颜色组成（必须要显示规定才符合规则）
             BufferLayout layout = {
@@ -42,15 +47,17 @@ namespace Hazel {
                 { ShaderDataType::Float3, "a_Position" },
                 { ShaderDataType::Float4, "a_Color" }
             };
-
-            vertexBuffer->SetLayout(layout);        //把布局信息存储到vertexBuffer对象中
-            m_VertexArray->AddVertexBuffer(vertexBuffer);   //vertexBuffer指向OpenGLVertexBuffer对象，所以可以调用m_RendererID
+            //vertexBuffer如果不放进来，layout直接销毁了，这个指针无法传递对象
+            vertexBuffer->SetLayout(layout);        //把布局信息存储到m_layout对象中
+            m_VertexArray->AddVertexBuffer(vertexBuffer);   //绑定vao和vbo
         }
 
         uint32_t indices[3] = { 0, 1, 2 };
         std::shared_ptr<IndexBuffer> indexBuffer;
         indexBuffer.reset(IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32_t)));
         m_VertexArray->SetIndexBuffer(indexBuffer);
+
+        //创建正方形vao
         m_SquareVA.reset(VertexArray::Create());
 
         float squareVertices[3 * 4] = {
@@ -62,13 +69,15 @@ namespace Hazel {
 
         std::shared_ptr<VertexBuffer> squareVB;
         squareVB.reset(VertexBuffer::Create(squareVertices, sizeof(squareVertices)));
+        //临时对象在完整表达式结束时销毁
         squareVB->SetLayout({
             { ShaderDataType::Float3, "a_Position" }
             });
         m_SquareVA->AddVertexBuffer(squareVB);
 
-        uint32_t squareIndices[6] = { 0, 1, 2, 2, 3, 0 };
+        uint32_t squareIndices[6] = { 0, 1, 2, 2, 3, 0 };       //三个为一组绘制三角形，所以矩形需要六个索引（两个三角形构成一个矩形）
         std::shared_ptr<IndexBuffer> squareIB;
+
         squareIB.reset(IndexBuffer::Create(squareIndices, sizeof(squareIndices) / sizeof(uint32_t)));
         m_SquareVA->SetIndexBuffer(squareIB);
 
@@ -78,14 +87,16 @@ namespace Hazel {
  			
  			layout(location = 0) in vec3 a_Position;
             layout(location = 1) in vec4 a_Color;
-    
+
+            uniform mat4 u_ViewProjection;
+
  			out vec3 v_Position;
             out vec4 v_Color; 
  			void main()
  			{
                 v_Position = a_Position;
                 v_Color = a_Color;	
- 				gl_Position = vec4(a_Position, 1.0);
+ 				gl_Position = u_ViewProjection * vec4(a_Position, 1.0);	
  
  			}
  		)";
@@ -104,34 +115,38 @@ namespace Hazel {
  			}
  		)";
 
-        //创建一个shader对象
         m_Shader.reset(new Shader(vertexSrc, fragmentSrc));
+
         std::string blueShaderVertexSrc = R"(
-			#version 330 core
-			
-			layout(location = 0) in vec3 a_Position;
+ 			#version 330 core
+ 			
+ 			layout(location = 0) in vec3 a_Position;
 
-			out vec3 v_Position;
+            uniform mat4 u_ViewProjection;
 
-			void main()
-			{
-				v_Position = a_Position;
-				gl_Position = vec4(a_Position, 1.0);	
-			}
-		)";
+ 			out vec3 v_Position;
+ 
+ 			void main()
+ 			{
+                v_Position = a_Position;
+ 				gl_Position = u_ViewProjection * vec4(a_Position, 1.0);	
+ 
+ 			}
+ 		)";
 
         std::string blueShaderFragmentSrc = R"(
-			#version 330 core
-			
-			layout(location = 0) out vec4 color;
+ 			#version 330 core
 
-			in vec3 v_Position;
+ 			layout(location = 0) out vec4 color;
 
-			void main()
-			{
-				color = vec4(0.2, 0.3, 0.8, 1.0);
-			}
-		)";
+ 			in vec3 v_Position;
+
+ 			void main()
+ 			{
+ 				color = vec4(0.2, 0.3, 0.8, 1.0);
+
+ 			}
+ 		)";
 
         m_BlueShader.reset(new Shader(blueShaderVertexSrc, blueShaderFragmentSrc));
 
@@ -169,23 +184,23 @@ namespace Hazel {
     void Application::Run()
     {
         while (m_Running)
-        {
-            glClearColor(0.1f, 0.1f, 0.1f, 1);       //窗口颜色
-            glClear(GL_COLOR_BUFFER_BIT);
+        { 
+            RenderCommand::SetClearColor({ 0.1f, 0.5f, 0.1f, 1 });  //设置帧缓冲区的默认清除颜色
+            RenderCommand::Clear();     //清除帧缓冲区的指定缓存
 
-            m_BlueShader->Bind();
-            m_SquareVA->Bind();
-            glDrawElements(GL_TRIANGLES, m_SquareVA->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
+            m_Camera.SetPosition({ 0.5f, 0.5f, 0.0f });
+            m_Camera.SetRotation(45.0f);
 
-            //激活着色器
-            m_Shader->Bind();
+            Renderer::BeginScene(m_Camera);
+            Renderer::Submit(m_BlueShader, m_SquareVA);
+            Renderer::Submit(m_Shader, m_VertexArray);
 
-            m_VertexArray->Bind();
-            glDrawElements(GL_TRIANGLES, m_VertexArray->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
-
+            Renderer::EndScene();
+            
             for (Layer* layer : m_LayerStack)
                 layer->OnUpdate();      //是层级的onupdata，处理onupdata
 
+            m_ImGuiLayer->Begin();
             for (Layer* layer : m_LayerStack)
                 layer->OnImGuiRender();
             m_ImGuiLayer->End();

@@ -14,10 +14,10 @@ namespace Hazel {
 		virtual void Unbind() const override;
 
 		virtual const BufferLayout& GetLayout() const override { return m_Layout; }
-		virtual void SetLayout(const BufferLayout& layout) override { m_Layout = layout; }
+		virtual void SetLayout(const BufferLayout& layout) override { m_Layout = layout; }		//同类之间的赋值是可以�?
 	private:
 		uint32_t m_RendererID;
-		BufferLayout m_Layout;		//存储在OpenGLVertexBuffer对象里面，可以被父指针调用
+		BufferLayout m_Layout;		//存储在OpenGLVertexBuffer对象里面，可以被父指针调�?
 	};
 
 	class OpenGLIndexBuffer : public IndexBuffer
@@ -29,7 +29,7 @@ namespace Hazel {
 		virtual void Bind() const;
 		virtual void Unbind() const;
 
-		virtual uint32_t GetCount() const { return m_Count; }
+		virtual uint32_t GetCount() const { return m_Count; }		//获取索引数量
 	private:
 		uint32_t m_RendererID;
 		uint32_t m_Count;
