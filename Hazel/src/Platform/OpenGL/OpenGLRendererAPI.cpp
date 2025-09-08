@@ -13,7 +13,7 @@ namespace Hazel {
 	}
 	void OpenGLRendererAPI::DrawIndexed(const std::shared_ptr<VertexArray>& vertexArray) 
 	{
-		//提交几何体数据并触发渲染，一次性提交一个物体
+		//触发渲染，一次性只能触发一个物体
 		//三角形绘制/获取索引数量/索引类型/从数据缓冲区开头读取
 		glDrawElements(GL_TRIANGLES, vertexArray->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
 	}

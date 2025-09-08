@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Hazel/Core.h"
+#include "Hazel/Core/Timestep.h"
 #include "Hazel/Events/Event.h"
 
 namespace Hazel {
@@ -13,7 +14,7 @@ namespace Hazel {
 
         virtual void OnAttach() {}      //初始化压入层栈的层
         virtual void OnDetach() {}      //销毁弹出层栈的层
-        virtual void OnUpdate() {}
+        virtual void OnUpdate(Timestep ts) {}
         virtual void OnImGuiRender() {}
         virtual void OnEvent(Event& event) {}
 

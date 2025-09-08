@@ -7,17 +7,13 @@
 #include "Hazel/Events/Event.h"
 #include "Hazel/Events/ApplicationEvent.h"
 
+#include "Hazel/Core/Timestep.h"
+
 #include "Hazel/ImGui/ImGuiLayer.h"
-
-#include "Hazel/Renderer/Shader.h"
-#include "Hazel/Renderer/Buffer.h"
-#include "Hazel/Renderer/VertexArray.h"
-
-#include "Hazel/Renderer/OrthographicCamera.h"
 
 namespace Hazel {
 
-    class HAZEL_API Application
+    class  Application
     {
     public:
         Application();
@@ -36,18 +32,14 @@ namespace Hazel {
     private:
 
         bool OnWindowClose(WindowCloseEvent& e);
+
+    private:
         std::unique_ptr<Window> m_Window;       //智能指针管理，同一时间只能管理一个窗口，m_Window是一个指针
         ImGuiLayer* m_ImGuiLayer;
         bool m_Running = true;
         LayerStack m_LayerStack;
 
-        std::shared_ptr<Shader> m_Shader;
-        std::shared_ptr<VertexArray> m_VertexArray;
-
-        std::shared_ptr<Shader> m_BlueShader;
-        std::shared_ptr<VertexArray> m_SquareVA;
-
-        OrthographicCamera m_Camera;
+        float m_LastFrameTime = 0.0f;
 
     private:
         static Application* s_Instance;

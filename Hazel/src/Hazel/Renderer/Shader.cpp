@@ -127,11 +127,11 @@ namespace Hazel {
     {
         glUseProgram(0);
     }
-
+    //把4*4矩阵作为uniform变量上传到gpu
     void Shader::UploadUniformMat4(const std::string& name, const glm::mat4& matrix) 
     {
-        GLint location = glGetUniformLocation(m_RendererID, name.c_str());
-        glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
+        GLint location = glGetUniformLocation(m_RendererID, name.c_str());      //获取uniform位置
+        glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));      //上传矩阵数据/GL_FALSE表示不转置/将glm矩阵转化为float指针
     }
 
 }

@@ -14,6 +14,7 @@ namespace Hazel {
         void Bind() const;      //激活着色器
         void Unbind() const;    //解绑着色器
 
+        //把4*4矩阵作为uniform变量上传到gpu
         void UploadUniformMat4(const std::string& name, const glm::mat4& matrix);
 
 

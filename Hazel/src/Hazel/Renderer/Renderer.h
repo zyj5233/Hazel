@@ -13,15 +13,16 @@ namespace Hazel {
 		static void BeginScene(OrthographicCamera& camera);	
 		static void EndScene();
 
-		static void Submit(const std::shared_ptr<Shader>& shader, const std::shared_ptr<VertexArray>& vertexArray);// 提交物体的顶点数组
+		//提交物体数据
+		static void Submit(const std::shared_ptr<Shader>& shader, const std::shared_ptr<VertexArray>& vertexArray, const glm::mat4& transform = glm::mat4(1.0f));// 提交物体的顶点数组
 		inline static RendererAPI::API GetAPI() { return RendererAPI::GetAPI(); }
 
 	private:
 		struct SceneData {
-			glm::mat4 ViewProjectionMatrix;
+			glm::mat4 ViewProjectionMatrix;	//VP矩阵
 		};
 
-		static SceneData* m_SceneData;
+		static SceneData* s_SceneData;		//场景数据就是vp矩阵
 
 
 	};
