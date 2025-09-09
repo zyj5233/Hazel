@@ -1,7 +1,10 @@
 #include <Hazel.h>
 
+#include "Platform/OpenGL/OpenGLShader.h"
 #include "imgui/imgui.h"
+
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 class ExampleLayer : public Hazel::Layer
 {
@@ -18,7 +21,7 @@ public:
 		};
 
 		std::shared_ptr<Hazel::VertexBuffer> vertexBuffer;
-		vertexBuffer.reset(Hazel::VertexBuffer::Create(vertices, sizeof(vertices)));
+		vertexBuffer.reset(Hazel::VertexBuffer::Create(vertices, sizeof(vertices)));		//创建三角形vbo
 
 		//说明书：告诉顶点由三个位置和四个颜色组成（必须要显示规定才符合规则）
 		Hazel::BufferLayout layout = {
@@ -32,13 +35,14 @@ public:
 		uint32_t indices[3] = { 0, 1, 2 };
 		std::shared_ptr<Hazel::IndexBuffer> indexBuffer;
 
-		indexBuffer.reset(Hazel::IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32_t)));
-		m_VertexArray->SetIndexBuffer(indexBuffer);
+		indexBuffer.reset(Hazel::IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32_t)));	//创建ibo
+		m_VertexArray->SetIndexBuffer(indexBuffer);		//绑定vao和ibo
 
+		//-----------------
 		//创建正方形vao
+		//-----------------
 		m_SquareVA.reset(Hazel::VertexArray::Create());
 
-		
 		float squareVertices[3 * 4] = {
 			-0.75f, -0.75f, 0.0f,
 			 0.75f, -0.75f, 0.0f,
@@ -95,9 +99,9 @@ public:
 			}
 		)";
 
-		m_Shader.reset(new Hazel::Shader(vertexSrc, fragmentSrc));
+		m_Shader.reset(Hazel::Shader::Create(vertexSrc, fragmentSrc));		//创建OpenGLShader对象并调用其构造函数，构造函数包含一系列句柄，编译，链接操作
 
-		std::string blueShaderVertexSrc = R"(
+		std::string flatColorShaderVertexSrc = R"(
 			#version 330 core
 			
 			layout(location = 0) in vec3 a_Position;
@@ -114,64 +118,78 @@ public:
 			}
 		)";
 
-		std::string blueShaderFragmentSrc = R"(
+		std::string flatColorShaderFragmentSrc = R"(
 			#version 330 core
 			
 			layout(location = 0) out vec4 color;
 
 			in vec3 v_Position;
+			uniform vec3 u_Color;
 
 			void main()
 			{
-				color = vec4(0.2, 0.3, 0.8, 1.0);
+				color = vec4(u_Color, 1.0);
 			}
 		)";
 
-		m_BlueShader.reset(new Hazel::Shader(blueShaderVertexSrc, blueShaderFragmentSrc));
+		m_FlatColorShader.reset(Hazel::Shader::Create(flatColorShaderVertexSrc, flatColorShaderFragmentSrc));
     }
 
     void OnUpdate(Hazel::Timestep ts) override        //sandboxapp层级
     {
+		//实际移动的是相机
 		if (Hazel::Input::IsKeyPressed(HZ_KEY_LEFT))
-			m_CameraPosition.x -= m_CameraMoveSpeed * ts;
+			m_CameraPosition.x -= m_CameraMoveSpeed * ts.GetSeconds();
 		else if (Hazel::Input::IsKeyPressed(HZ_KEY_RIGHT))
-			m_CameraPosition.x += m_CameraMoveSpeed * ts;
+			m_CameraPosition.x += m_CameraMoveSpeed * ts.GetSeconds();
 
 		if (Hazel::Input::IsKeyPressed(HZ_KEY_UP))
-			m_CameraPosition.y += m_CameraMoveSpeed * ts;
+			m_CameraPosition.y += m_CameraMoveSpeed * ts.GetSeconds();
 		else if (Hazel::Input::IsKeyPressed(HZ_KEY_DOWN))
-			m_CameraPosition.y -= m_CameraMoveSpeed * ts;
+			m_CameraPosition.y -= m_CameraMoveSpeed * ts.GetSeconds();
 
 		if (Hazel::Input::IsKeyPressed(HZ_KEY_A))
-			m_CameraRotation += m_CameraRotationSpeed * ts;
+			m_CameraRotation += m_CameraRotationSpeed * ts.GetSeconds();
 		if (Hazel::Input::IsKeyPressed(HZ_KEY_D))
-			m_CameraRotation -= m_CameraRotationSpeed * ts;
-
+			m_CameraRotation -= m_CameraRotationSpeed * ts.GetSeconds();
+		
+		//背景颜色
 		Hazel::RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
+		//实行清除功能
 		Hazel::RenderCommand::Clear();
-
+		//设置相机的位置和旋转角度
 		m_Camera.SetPosition(m_CameraPosition);
 		m_Camera.SetRotation(m_CameraRotation);
 
+		//传递参数并且设置整个场景的渲染开始
 		Hazel::Renderer::BeginScene(m_Camera);
 
+		//缩放矩阵
 		glm::mat4 scale = glm::scale(glm::mat4(1.0f), glm::vec3(0.1f));
+
+		//绑定m_FlatColorShader着色器
+		std::dynamic_pointer_cast<Hazel::OpenGLShader>(m_FlatColorShader)->Bind();
+		//上传矩形颜色
+		std::dynamic_pointer_cast<Hazel::OpenGLShader>(m_FlatColorShader)->UploadUniformFloat3("u_Color", m_SquareColor);
 
 		for (int y = 0; y < 20; y++)
 		{
 			for (int x = 0; x < 20; x++)
 			{
-				glm::vec3 pos(x * 0.11f, y * 0.11f, 0.0f);
-				glm::mat4 transform = glm::translate(glm::mat4(1.0f), pos) * scale;
-				Hazel::Renderer::Submit(m_BlueShader, m_SquareVA, transform);
+				glm::vec3 pos(x * 0.11f, y * 0.11f, 0.0f);	//x，y，z轴位置，间距0.11个单位
+				glm::mat4 transform = glm::translate(glm::mat4(1.0f), pos) * scale;	//缩放矩阵*平移矩阵
+				Hazel::Renderer::Submit(m_FlatColorShader, m_SquareVA, transform);	//渲染提交
 			}
 		}
-		Hazel::Renderer::Submit(m_Shader, m_VertexArray);
+		Hazel::Renderer::Submit(m_Shader, m_VertexArray);	//绑定m_Shader着色器和vao并开始渲染
 
 		Hazel::Renderer::EndScene();
     }
     virtual void OnImGuiRender() override
     {
+		ImGui::Begin("Settings");
+		ImGui::ColorEdit3("Square Color", glm::value_ptr(m_SquareColor));
+		ImGui::End();
     }
 
     void OnEvent(Hazel::Event& event) override
@@ -182,7 +200,7 @@ public:
 		std::shared_ptr<Hazel::Shader> m_Shader;
 		std::shared_ptr<Hazel::VertexArray> m_VertexArray;
 
-		std::shared_ptr<Hazel::Shader> m_BlueShader;
+		std::shared_ptr<Hazel::Shader> m_FlatColorShader;
 		std::shared_ptr<Hazel::VertexArray> m_SquareVA;
 
 		Hazel::OrthographicCamera m_Camera;
@@ -191,6 +209,8 @@ public:
 
 		float m_CameraRotation = 0.0f;
 		float m_CameraRotationSpeed = 180.0f;
+
+		glm::vec3 m_SquareColor = { 0.2f, 0.3f, 0.8f };
 };
 
 class Sandbox : public Hazel::Application

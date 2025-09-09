@@ -6,6 +6,7 @@
 
 #include "Hazel/Renderer/Renderer.h"
 #include "Input.h"
+#include "Core/Timestep.h"
 #include <glfw/glfw3.h>
 
 namespace Hazel { 
@@ -61,8 +62,8 @@ namespace Hazel {
     {
         while (m_Running)
         { 
-            float time = (float)glfwGetTime();
-            Timestep timestep = time - m_LastFrameTime;
+            float time = (float)glfwGetTime();      //获取当前帧时间
+            Timestep timestep(time - m_LastFrameTime);
             m_LastFrameTime = time;
             
             for (Layer* layer : m_LayerStack)

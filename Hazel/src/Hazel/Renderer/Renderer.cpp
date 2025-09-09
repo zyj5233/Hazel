@@ -1,5 +1,6 @@
 #include "hzpch.h"
 #include "Renderer.h"
+#include "Platform/OpenGL/OpenGLShader.h"
 
 namespace Hazel {
 
@@ -7,7 +8,7 @@ namespace Hazel {
 
 	void Renderer::BeginScene(OrthographicCamera& camera)		//设置一整个场景的渲染开始
 	{
-		s_SceneData->ViewProjectionMatrix = camera.GetViewProjectionMatrix();	//获取VP矩阵
+		s_SceneData->ViewProjectionMatrix = camera.GetViewProjectionMatrix();	//获取VP矩阵（因为VP矩阵是场景级资源）
 	}
 
 	void Renderer::EndScene()		//渲染结束
@@ -18,8 +19,9 @@ namespace Hazel {
 	void Renderer::Submit(const std::shared_ptr<Shader>& shader, const std::shared_ptr<VertexArray>& vertexArray, const glm::mat4& transform)
 	{
 		shader->Bind();
-		shader->UploadUniformMat4("u_ViewProjection", s_SceneData->ViewProjectionMatrix);
-		shader->UploadUniformMat4("u_Transform", transform);
+		//强制转换为子类指针
+		std::dynamic_pointer_cast<OpenGLShader>(shader)->UploadUniformMat4("u_ViewProjection", s_SceneData->ViewProjectionMatrix);
+		std::dynamic_pointer_cast<OpenGLShader>(shader)->UploadUniformMat4("u_Transform", transform);
 
 		vertexArray->Bind();					// 顶点数组绑定
 		RenderCommand::DrawIndexed(vertexArray);// 调用drawcall

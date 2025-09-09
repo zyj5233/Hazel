@@ -13,7 +13,7 @@ namespace Hazel{
         m_ViewProjectionMatrix = m_ProjectionMatrix * m_ViewMatrix;
     }
 
-    // 投影观察矩阵计算
+    // VP矩阵计算
     void OrthographicCamera::RecalculateViewMatrix()
     {
         // 观察矩阵

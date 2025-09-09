@@ -39,7 +39,7 @@ namespace Hazel {
         bool m_Running = true;
         LayerStack m_LayerStack;
 
-        float m_LastFrameTime = 0.0f;
+        float m_LastFrameTime = 0.0f;       //从0开始计时
 
     private:
         static Application* s_Instance;
