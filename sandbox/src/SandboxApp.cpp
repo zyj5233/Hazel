@@ -14,13 +14,14 @@ public:
     {
 		m_VertexArray.reset(Hazel::VertexArray::Create());	////创建三角形vao
 
+		//模型坐标一般原点都在模型中心
 		float vertices[3 * 7] = {
 			-0.5f, -0.5f, 0.0f, 0.8f, 0.2f, 0.8f, 1.0f,
 			 0.5f, -0.5f, 0.0f, 0.2f, 0.3f, 0.8f, 1.0f,
 			 0.0f,  0.5f, 0.0f, 0.8f, 0.8f, 0.2f, 1.0f
 		};
 
-		std::shared_ptr<Hazel::VertexBuffer> vertexBuffer;
+		Hazel::Ref<Hazel::VertexBuffer> vertexBuffer;
 		vertexBuffer.reset(Hazel::VertexBuffer::Create(vertices, sizeof(vertices)));		//创建三角形vbo
 
 		//说明书：告诉顶点由三个位置和四个颜色组成（必须要显示规定才符合规则）
@@ -33,7 +34,7 @@ public:
 		m_VertexArray->AddVertexBuffer(vertexBuffer);	//绑定vao和vbo
 
 		uint32_t indices[3] = { 0, 1, 2 };
-		std::shared_ptr<Hazel::IndexBuffer> indexBuffer;
+		Hazel::Ref<Hazel::IndexBuffer> indexBuffer;
 
 		indexBuffer.reset(Hazel::IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32_t)));	//创建ibo
 		m_VertexArray->SetIndexBuffer(indexBuffer);		//绑定vao和ibo
@@ -44,13 +45,13 @@ public:
 		m_SquareVA.reset(Hazel::VertexArray::Create());
 
 		float squareVertices[3 * 4] = {
-			-0.75f, -0.75f, 0.0f,
-			 0.75f, -0.75f, 0.0f,
-			 0.75f,  0.75f, 0.0f,
-			-0.75f,  0.75f, 0.0f
+			-0.5f, -0.5f, 0.0f,
+			 0.5f, -0.5f, 0.0f,
+			 0.5f,  0.5f, 0.0f,
+			-0.5f,  0.5f, 0.0f
 		};
 
-		std::shared_ptr<Hazel::VertexBuffer> squareVB;
+		Hazel::Ref<Hazel::VertexBuffer> squareVB;
 		squareVB.reset(Hazel::VertexBuffer::Create(squareVertices, sizeof(squareVertices)));	//临时对象在完整表达式结束时销毁
 
 		squareVB->SetLayout({
@@ -59,7 +60,7 @@ public:
 		m_SquareVA->AddVertexBuffer(squareVB);
 
 		uint32_t squareIndices[6] = { 0, 1, 2, 2, 3, 0 };
-		std::shared_ptr<Hazel::IndexBuffer> squareIB;
+		Hazel::Ref<Hazel::IndexBuffer> squareIB;
 		squareIB.reset(Hazel::IndexBuffer::Create(squareIndices, sizeof(squareIndices) / sizeof(uint32_t)));
 		m_SquareVA->SetIndexBuffer(squareIB);
 
@@ -169,7 +170,7 @@ public:
 
 		//绑定m_FlatColorShader着色器
 		std::dynamic_pointer_cast<Hazel::OpenGLShader>(m_FlatColorShader)->Bind();
-		//上传矩形颜色
+		//矩形颜色可选
 		std::dynamic_pointer_cast<Hazel::OpenGLShader>(m_FlatColorShader)->UploadUniformFloat3("u_Color", m_SquareColor);
 
 		for (int y = 0; y < 20; y++)
@@ -177,10 +178,11 @@ public:
 			for (int x = 0; x < 20; x++)
 			{
 				glm::vec3 pos(x * 0.11f, y * 0.11f, 0.0f);	//x，y，z轴位置，间距0.11个单位
-				glm::mat4 transform = glm::translate(glm::mat4(1.0f), pos) * scale;	//缩放矩阵*平移矩阵
+				glm::mat4 transform = glm::translate(glm::mat4(1.0f), pos) * scale;	//旋转矩阵*平移矩阵*缩放矩阵=模型矩阵
 				Hazel::Renderer::Submit(m_FlatColorShader, m_SquareVA, transform);	//渲染提交
 			}
 		}
+
 		Hazel::Renderer::Submit(m_Shader, m_VertexArray);	//绑定m_Shader着色器和vao并开始渲染
 
 		Hazel::Renderer::EndScene();
@@ -188,7 +190,7 @@ public:
     virtual void OnImGuiRender() override
     {
 		ImGui::Begin("Settings");
-		ImGui::ColorEdit3("Square Color", glm::value_ptr(m_SquareColor));
+		ImGui::ColorEdit3("Square Color", glm::value_ptr(m_SquareColor));	//创建一个可自由选择颜色的ui
 		ImGui::End();
     }
 
@@ -197,11 +199,11 @@ public:
     }
 
 	private:
-		std::shared_ptr<Hazel::Shader> m_Shader;
-		std::shared_ptr<Hazel::VertexArray> m_VertexArray;
-
-		std::shared_ptr<Hazel::Shader> m_FlatColorShader;
-		std::shared_ptr<Hazel::VertexArray> m_SquareVA;
+		Hazel::Ref<Hazel::Shader> m_Shader;
+		Hazel::Ref<Hazel::VertexArray> m_VertexArray;
+		
+		Hazel::Ref<Hazel::Shader> m_FlatColorShader;
+		Hazel::Ref<Hazel::VertexArray> m_SquareVA;
 
 		Hazel::OrthographicCamera m_Camera;
 		glm::vec3 m_CameraPosition;
@@ -210,7 +212,7 @@ public:
 		float m_CameraRotation = 0.0f;
 		float m_CameraRotationSpeed = 180.0f;
 
-		glm::vec3 m_SquareColor = { 0.2f, 0.3f, 0.8f };
+		glm::vec3 m_SquareColor = { 0.2f, 0.3f, 0.8f };	//初始化颜色
 };
 
 class Sandbox : public Hazel::Application

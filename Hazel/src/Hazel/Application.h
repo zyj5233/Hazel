@@ -45,7 +45,7 @@ namespace Hazel {
         static Application* s_Instance;
     };
 
-    // To be defined in CLIENT
+    //定义在sandbox
     Application* CreateApplication();
 
 }

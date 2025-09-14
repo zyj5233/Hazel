@@ -16,7 +16,7 @@ namespace Hazel {
 		virtual void SetClearColor(const glm::vec4& color) = 0;	// 设置清除后的颜色
 		virtual void Clear() = 0;								// 清除哪些缓冲
 
-		virtual void DrawIndexed(const std::shared_ptr<VertexArray>& vertexArray) = 0;
+		virtual void DrawIndexed(const Ref<VertexArray>& vertexArray) = 0;
 		inline static API GetAPI() { return s_API; }		//对于小型简单的类型，不占内存，值返回更高效
 
 	private:

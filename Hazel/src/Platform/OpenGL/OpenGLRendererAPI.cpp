@@ -11,7 +11,7 @@ namespace Hazel {
 	{
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);		//执行清除，清除颜色缓冲和深度缓冲
 	}
-	void OpenGLRendererAPI::DrawIndexed(const std::shared_ptr<VertexArray>& vertexArray) 
+	void OpenGLRendererAPI::DrawIndexed(const Ref<VertexArray>& vertexArray)
 	{
 		//触发渲染，一次性只能触发一个物体
 		//三角形绘制/获取索引数量/索引类型/从数据缓冲区开头读取
