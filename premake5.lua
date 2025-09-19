@@ -17,6 +17,7 @@ IncludeDir["GLFW"] = "Hazel/vendor/GLFW/include"		--把GLWF的路径填进空表
 IncludeDir["Glad"] = "Hazel/vendor/Glad/include"
 IncludeDir["ImGui"] = "Hazel/vendor/imgui"
 IncludeDir["glm"] = "Hazel/vendor/glm"
+IncludeDir["stb_image"] = "Hazel/vendor/stb_image"
 
 include "Hazel/vendor/GLFW"		--把一个GLWF的premake导入这个premake
 include "Hazel/vendor/Glad"
@@ -41,6 +42,8 @@ project "Hazel"		--Hazel项目
 	{
 		"%{prj.name}/src/**.h",
 		"%{prj.name}/src/**.cpp",
+		"%{prj.name}/vendor/stb_image/**.h",
+		"%{prj.name}/vendor/stb_image/**.cpp",
 		"%{prj.name}/vendor/glm/glm/**.hpp",
 		"%{prj.name}/vendor/glm/glm/**.inl",
 	}
@@ -58,7 +61,8 @@ project "Hazel"		--Hazel项目
 		"%{IncludeDir.GLFW}",		--把之前表里GLFW的地址添加进搜索列表
 		"%{IncludeDir.Glad}",
 		"%{IncludeDir.ImGui}",
- 		"%{IncludeDir.glm}"
+ 		"%{IncludeDir.glm}",
+		"%{IncludeDir.stb_image}"
 	}
 	
 	links 
