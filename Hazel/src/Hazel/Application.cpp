@@ -24,6 +24,8 @@ namespace Hazel {
         //保存窗口事件回调函数
         m_Window->SetEventCallback(BIND_EVENT_FN(OnEvent));
 
+        Renderer::Init();
+
         m_ImGuiLayer = new ImGuiLayer();
         PushOverlay(m_ImGuiLayer);
 

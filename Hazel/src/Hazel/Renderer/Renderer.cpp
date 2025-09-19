@@ -6,6 +6,11 @@ namespace Hazel {
 
 	Renderer::SceneData* Renderer:: s_SceneData = new Renderer::SceneData;
 
+	void Renderer::Init()
+	{
+		RenderCommand::Init();
+	}
+
 	void Renderer::BeginScene(OrthographicCamera& camera)		//设置一整个场景的渲染开始
 	{
 		s_SceneData->ViewProjectionMatrix = camera.GetViewProjectionMatrix();	//获取VP矩阵（因为VP矩阵是场景级资源）

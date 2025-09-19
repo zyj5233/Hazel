@@ -17,13 +17,28 @@ namespace Hazel {
 		m_Width = width;
 		m_Height = height;
 
+
+		GLenum internalFormat = 0, dataFormat = 0;
+		if (channels == 4)
+		{
+			internalFormat = GL_RGBA8;
+			dataFormat = GL_RGBA;
+		}
+		else if (channels == 3)
+		{
+			internalFormat = GL_RGB8;
+			dataFormat = GL_RGB;
+		}
+
+		HZ_CORE_ASSERT(internalFormat & dataFormat, "Format not supported!");
+
 		glCreateTextures(GL_TEXTURE_2D, 1, &m_RendererID);	//创建1个纹理对象
-		glTextureStorage2D(m_RendererID, 1, GL_RGB8, m_Width, m_Height);	//分配纹理空间
+		glTextureStorage2D(m_RendererID, 1, internalFormat, m_Width, m_Height);	//分配纹理空间
 
 		glTextureParameteri(m_RendererID, GL_TEXTURE_MIN_FILTER, GL_LINEAR);	//缩小过滤/线性插值
 		glTextureParameteri(m_RendererID, GL_TEXTURE_MAG_FILTER, GL_NEAREST);	//放大过滤/最近临插值
 
-		glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Width, m_Height, GL_RGB, GL_UNSIGNED_BYTE, data);	//把图像数据上传上面开辟的GPU纹理空间
+		glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Width, m_Height, dataFormat, GL_UNSIGNED_BYTE, data);	//把图像数据上传上面开辟的GPU纹理空间
 
 		stbi_image_free(data);	//释放由 stbi_load加载的图像数据
 	}
