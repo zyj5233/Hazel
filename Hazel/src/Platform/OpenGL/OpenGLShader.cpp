@@ -1,88 +1,121 @@
 #include "hzpch.h"
 #include "OpenGLShader.h"
 
+#include <fstream>
 #include <glad/glad.h>
 
 #include <glm/gtc/type_ptr.hpp>
 
 namespace Hazel {
 
+	static GLenum ShaderTypeFromString(const std::string& type)
+	{
+		if (type == "vertex")
+			return GL_VERTEX_SHADER;
+		if (type == "fragment" || type == "pixel")
+			return GL_FRAGMENT_SHADER;
+
+		HZ_CORE_ASSERT(false, "Unknown shader type!");
+		return 0;
+	}
+
+	OpenGLShader::OpenGLShader(const std::string& filepath)
+	{
+		std::string source = ReadFile(filepath);
+		auto shaderSources = PreProcess(source);
+		Compile(shaderSources);
+	}
+
 	OpenGLShader::OpenGLShader(const std::string& vertexSrc, const std::string& fragmentSrc)
 	{
-		// 创建空顶点着色器对象并赋予句柄
-		GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
+		std::unordered_map<GLenum, std::string> sources;
+		sources[GL_VERTEX_SHADER] = vertexSrc;
+		sources[GL_FRAGMENT_SHADER] = fragmentSrc;
+		Compile(sources);
+	}
 
-		// 顶点着色器源代码转换成c风格
-		// 源码传给OpenGL的顶点着色器对象vertexshader
-		const GLchar* source = vertexSrc.c_str();
-		glShaderSource(vertexShader, 1, &source, 0);
+	OpenGLShader::~OpenGLShader()
+	{
+		glDeleteProgram(m_RendererID);
+	}
 
-		// 编译源码
-		glCompileShader(vertexShader);
-
-		//检查是否编译
-		GLint isCompiled = 0;
-		glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &isCompiled);
-
-		if (isCompiled == GL_FALSE)		//如果编译失败
+	std::string OpenGLShader::ReadFile(const std::string& filepath)
+	{
+		std::string result;
+		std::ifstream in(filepath, std::ios::in, std::ios::binary);
+		if (in)
 		{
-			//获取错误信息的长度
-			GLint maxLength = 0;
-			glGetShaderiv(vertexShader, GL_INFO_LOG_LENGTH, &maxLength);
+			in.seekg(0, std::ios::end);
+			result.resize(in.tellg());
+			in.seekg(0, std::ios::beg);
+			in.read(&result[0], result.size());
+			in.close();
+			;
+		}
+		else
+		{
+			HZ_CORE_ERROR("Could not open file '{0}'", filepath);
+		}
+		return result;
+	}
 
-			// 创建容器存储错误信息
-			std::vector<GLchar> errorInfoLog(maxLength);
-			//获取详细的错误信息
-			glGetShaderInfoLog(vertexShader, maxLength, &maxLength, &errorInfoLog[0]);
+	std::unordered_map<GLenum, std::string> OpenGLShader::PreProcess(const std::string& source)
+	{
+		std::unordered_map<GLenum, std::string> shaderSources;
+		const char* typeToken = "#type";
+		size_t typeTokenLength = strlen(typeToken);
+		size_t pos = source.find(typeToken, 0);
+		while (pos != std::string::npos)
+		{
+			size_t eol = source.find_first_of("\r\n", pos);
+			HZ_CORE_ASSERT(eol != std::string::npos, "Syntax error");
+			size_t begin = pos + typeTokenLength + 1;
+			std::string type = source.substr(begin, eol - begin);
+			HZ_CORE_ASSERT(ShaderTypeFromString(type), "Invalid shader type specified");
 
-			// 删除不再需要的着色器对象
-			glDeleteShader(vertexShader);
+			size_t nextLinePos = source.find_first_not_of("\r\n", eol);
+			pos = source.find(typeToken, nextLinePos);
+			shaderSources[ShaderTypeFromString(type)] = source.substr(nextLinePos, 
+				pos - (nextLinePos == std::string::npos ? source.size() - 1 : nextLinePos));
+		}
+		return shaderSources;
+	}
 
-			//输出错误信息到日志
-			HZ_CORE_ERROR("{0}", errorInfoLog.data());
-			//触发断言，终止程序并输出错误提示
-			HZ_CORE_ASSERT(false, "Vertex shader compilation failure!");
-			return;
+	void OpenGLShader::Compile(const std::unordered_map<GLenum, std::string>& shaderSources)
+	{
+		GLuint program = glCreateProgram();
+		std::vector<GLenum> glShaderIDs(shaderSources.size());
+		for (auto& kv : shaderSources)
+		{
+			GLenum type = kv.first;
+			const std::string& source = kv.second;
+
+			GLuint shader = glCreateShader(type);
+			const GLchar* sourceCStr = source.c_str();
+			glShaderSource(shader, 1, &sourceCStr, 0);
+			
+			glCompileShader(shader);
+			
+			GLint isCompiled = 0;
+			glGetShaderiv(shader, GL_COMPILE_STATUS, &isCompiled);
+			if (isCompiled == GL_FALSE)
+			{
+				GLint maxLength = 0;
+				glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &maxLength);
+
+				std::vector<GLchar> infoLog(maxLength);
+				glGetShaderInfoLog(shader, maxLength, &maxLength, &infoLog[0]);
+				glDeleteShader(shader);
+				HZ_CORE_ERROR("{0}", infoLog.data());
+				HZ_CORE_ASSERT(false, "Shader compilation failure!");
+				break;
+			}
+
+			glAttachShader(program, shader);
+			glShaderIDs.push_back(shader);
 		}
 
-		// 创建片段着色器句柄
-		GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-
-		// 获取源码并转为c语言风格
-		// 传给OpenGL的片段着色器fragmentShader
-		source = fragmentSrc.c_str();
-		glShaderSource(fragmentShader, 1, &source, 0);
-
-		// 编译源码
-		glCompileShader(fragmentShader);
-
-		glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &isCompiled);
-		if (isCompiled == GL_FALSE)
-		{
-			GLint maxLength = 0;
-			glGetShaderiv(fragmentShader, GL_INFO_LOG_LENGTH, &maxLength);
-
-			
-			std::vector<GLchar> errorInfoLog(maxLength);
-			glGetShaderInfoLog(fragmentShader, maxLength, &maxLength, &errorInfoLog[0]);
-
-			
-			glDeleteShader(fragmentShader);
-			
-			glDeleteShader(vertexShader);
-
-			HZ_CORE_ERROR("{0}", errorInfoLog.data());
-			HZ_CORE_ASSERT(false, "Fragment shader compilation failure!");
-			return;
-		}
-
-		// 创建着色器程序对象并赋予句柄
-		m_RendererID = glCreateProgram();
-		GLuint program = m_RendererID;
-
-		// 将顶点着色器和片段着色器附加到程序上
-		glAttachShader(program, vertexShader);
-		glAttachShader(program, fragmentShader);
+		m_RendererID = program;
 
 		// 会将各个着色器的代码组合成一个单一的、可在 GPU 上执行的程序
 		glLinkProgram(program);
@@ -101,21 +134,15 @@ namespace Hazel {
 
 			glDeleteProgram(program);
 
-			glDeleteShader(vertexShader);
-			glDeleteShader(fragmentShader);
+			for (auto id : glShaderIDs)
+				glDeleteShader(id);
 
 			HZ_CORE_ERROR("{0}", infoLog.data());
 			HZ_CORE_ASSERT(false, "Shader link failure!");
 			return;
 		}
-		//删除原始代码
-		glDetachShader(program, vertexShader);
-		glDetachShader(program, fragmentShader);
-	}
-
-	OpenGLShader::~OpenGLShader()
-	{
-		glDeleteProgram(m_RendererID);
+		for (auto id : glShaderIDs)
+			glDetachShader(program, id);
 	}
 	//绑定完整着色器
 	void OpenGLShader::Bind() const
