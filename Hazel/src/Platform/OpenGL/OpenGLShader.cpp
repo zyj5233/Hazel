@@ -24,9 +24,16 @@ namespace Hazel {
 		std::string source = ReadFile(filepath);
 		auto shaderSources = PreProcess(source);
 		Compile(shaderSources);
+
+		auto lastSlash = filepath.find_last_of("/\\");	//查找最后一个路径分隔符
+		lastSlash = lastSlash == std::string::npos ? 0 : lastSlash + 1;	//计算文件名起始位置
+		auto lastDot = filepath.rfind('.');		//查找最后一个点号
+		auto count = lastDot == std::string::npos ? filepath.size() - lastSlash : lastDot - lastSlash;	//计算文件名长度
+		m_Name = filepath.substr(lastSlash, count);	//提取子字符串
 	}
 
-	OpenGLShader::OpenGLShader(const std::string& vertexSrc, const std::string& fragmentSrc)
+	OpenGLShader::OpenGLShader(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc)
+		: m_Name(name)
 	{
 		std::unordered_map<GLenum, std::string> sources;
 		sources[GL_VERTEX_SHADER] = vertexSrc;
@@ -42,7 +49,7 @@ namespace Hazel {
 	std::string OpenGLShader::ReadFile(const std::string& filepath)
 	{
 		std::string result;
-		std::ifstream in(filepath, std::ios::in, std::ios::binary);
+		std::ifstream in(filepath, std::ios::in | std::ios::binary);
 		if (in)
 		{
 			in.seekg(0, std::ios::end);
@@ -83,19 +90,21 @@ namespace Hazel {
 
 	void OpenGLShader::Compile(const std::unordered_map<GLenum, std::string>& shaderSources)
 	{
-		GLuint program = glCreateProgram();
-		std::vector<GLenum> glShaderIDs(shaderSources.size());
+		GLuint program = glCreateProgram();	
+		HZ_CORE_ASSERT(shaderSources.size() <= 2, "We only support 2 shaders for now");
+		std::array<GLenum, 2> glShaderIDs;
+		int glShaderIDIndex = 0;
 		for (auto& kv : shaderSources)
 		{
+			//创建并编译单个着色器
 			GLenum type = kv.first;
 			const std::string& source = kv.second;
-
 			GLuint shader = glCreateShader(type);
 			const GLchar* sourceCStr = source.c_str();
 			glShaderSource(shader, 1, &sourceCStr, 0);
-			
 			glCompileShader(shader);
 			
+			//检查是否编译错误
 			GLint isCompiled = 0;
 			glGetShaderiv(shader, GL_COMPILE_STATUS, &isCompiled);
 			if (isCompiled == GL_FALSE)
@@ -111,8 +120,8 @@ namespace Hazel {
 				break;
 			}
 
-			glAttachShader(program, shader);
-			glShaderIDs.push_back(shader);
+			glAttachShader(program, shader);	//把编译成功的着色器附加到程序
+			glShaderIDs[glShaderIDIndex++] = shader;		//将着色器ID存入 glShaderIDs以便后续管理
 		}
 
 		m_RendererID = program;
@@ -124,19 +133,23 @@ namespace Hazel {
 		GLint isLinked = 0;
 		glGetProgramiv(program, GL_LINK_STATUS, (int*)&isLinked);
 
-		if (isLinked == GL_FALSE)
+		if (isLinked == GL_FALSE)	//如果链接失败
 		{
-			GLint maxLength = 0;
+			//获取错误信息长度
+			GLint maxLength = 0;	
 			glGetProgramiv(program, GL_INFO_LOG_LENGTH, &maxLength);
 
+			//创建容器存储错误信息
 			std::vector<GLchar> infoLog(maxLength);
 			glGetProgramInfoLog(program, maxLength, &maxLength, &infoLog[0]);
 
+			//删除不再需要的着色器对象
 			glDeleteProgram(program);
 
 			for (auto id : glShaderIDs)
 				glDeleteShader(id);
 
+			//输出日志并触发断言
 			HZ_CORE_ERROR("{0}", infoLog.data());
 			HZ_CORE_ASSERT(false, "Shader link failure!");
 			return;

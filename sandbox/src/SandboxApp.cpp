@@ -101,7 +101,7 @@ public:
 			}
 		)";
 
-		m_Shader.reset(Hazel::Shader::Create(vertexSrc, fragmentSrc));		//创建OpenGLShader对象并调用其构造函数，构造函数包含一系列句柄，编译，链接操作
+		m_Shader. = Hazel::Shader::Create("VertexPosColor", vertexSrc, fragmentSrc));		//创建OpenGLShader对象并调用其构造函数，构造函数包含一系列句柄，编译，链接操作
 
 		std::string flatColorShaderVertexSrc = R"(
 			#version 330 core
@@ -134,17 +134,17 @@ public:
 			}
 		)";
 
-		m_FlatColorShader.reset(Hazel::Shader::Create(flatColorShaderVertexSrc, flatColorShaderFragmentSrc));
+		m_FlatColorShader = Hazel::Shader::Create("FlatColor",flatColorShaderVertexSrc, flatColorShaderFragmentSrc);
 
 
 		//纹理着色器
-		m_TextureShader.reset(Hazel::Shader::Create("assets/shaders/Texture.glsl"));
+		auto textureShader = m_ShaderLibrary.Load("assets/shaders/Texture.glsl");
 		//纹理对象
 		m_Texture = Hazel::Texture2D::Create("assets/textures/rem.png");
 		m_ChernoLogoTexture = Hazel::Texture2D::Create("assets/textures/ChernoLogo.png");
 		//绑定纹理着色器
-		std::dynamic_pointer_cast<Hazel::OpenGLShader>(m_TextureShader)->Bind();
-		std::dynamic_pointer_cast<Hazel::OpenGLShader>(m_TextureShader)->UploadUniformInt("u_Texture", 0);
+		std::dynamic_pointer_cast<Hazel::OpenGLShader>(textureShader)->Bind();
+		std::dynamic_pointer_cast<Hazel::OpenGLShader>(textureShader)->UploadUniformInt("u_Texture", 0);
     }
 
     void OnUpdate(Hazel::Timestep ts) override        //sandboxapp层级
@@ -194,12 +194,14 @@ public:
 			}
 		}
 
+		auto textureShader = m_ShaderLibrary.Get("Texture");
+
 		//绑定纹理对象
 		m_Texture->Bind();
-		Hazel::Renderer::Submit(m_TextureShader, m_SquareVA, glm::scale(glm::mat4(1.0f), glm::vec3(1.5f)));
+		Hazel::Renderer::Submit(textureShader, m_SquareVA, glm::scale(glm::mat4(1.0f), glm::vec3(1.5f)));
 
 		m_ChernoLogoTexture->Bind();
-		Hazel::Renderer::Submit(m_TextureShader, m_SquareVA, 
+		Hazel::Renderer::Submit(textureShader, m_SquareVA,
 			glm::translate(glm::mat4(1.0f),glm::vec3(0.25f, -0.25f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(1.5f)));
 		//三角形
 		//Hazel::Renderer::Submit(m_Shader, m_VertexArray);	//绑定m_Shader着色器和vao并开始渲染
@@ -218,10 +220,11 @@ public:
     }
 
 	private:
+		Hazel::ShaderLibrary m_ShaderLibrary;
 		Hazel::Ref<Hazel::Shader> m_Shader;
 		Hazel::Ref<Hazel::VertexArray> m_VertexArray;
 		
-		Hazel::Ref<Hazel::Shader> m_FlatColorShader, m_TextureShader;
+		Hazel::Ref<Hazel::Shader> m_FlatColorShader;
 		Hazel::Ref<Hazel::VertexArray> m_SquareVA;
 		Hazel::Ref<Hazel::Texture2D> m_Texture, m_ChernoLogoTexture;
 
