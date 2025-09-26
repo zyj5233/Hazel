@@ -10,7 +10,7 @@ class ExampleLayer : public Hazel::Layer
 {
 public:
     ExampleLayer()
-        : Layer("Example"), m_Camera(-1.6f, 1.6f, -0.9f, 0.9f), m_CameraPosition(0.0f)
+        : Layer("Example"), m_CameraController(1280.0f / 720.0f)
     {
 		m_VertexArray.reset(Hazel::VertexArray::Create());	////创建三角形vao
 
@@ -101,7 +101,7 @@ public:
 			}
 		)";
 
-		m_Shader. = Hazel::Shader::Create("VertexPosColor", vertexSrc, fragmentSrc));		//创建OpenGLShader对象并调用其构造函数，构造函数包含一系列句柄，编译，链接操作
+		m_Shader = Hazel::Shader::Create("VertexPosColor", vertexSrc, fragmentSrc);		//创建OpenGLShader对象并调用其构造函数，构造函数包含一系列句柄，编译，链接操作
 
 		std::string flatColorShaderVertexSrc = R"(
 			#version 330 core
@@ -149,33 +149,14 @@ public:
 
     void OnUpdate(Hazel::Timestep ts) override        //sandboxapp层级
     {
-		//实际移动的是相机
-		if (Hazel::Input::IsKeyPressed(HZ_KEY_LEFT))
-			m_CameraPosition.x -= m_CameraMoveSpeed * ts.GetSeconds();
-		else if (Hazel::Input::IsKeyPressed(HZ_KEY_RIGHT))
-			m_CameraPosition.x += m_CameraMoveSpeed * ts.GetSeconds();
-
-		if (Hazel::Input::IsKeyPressed(HZ_KEY_UP))
-			m_CameraPosition.y += m_CameraMoveSpeed * ts.GetSeconds();
-		else if (Hazel::Input::IsKeyPressed(HZ_KEY_DOWN))
-			m_CameraPosition.y -= m_CameraMoveSpeed * ts.GetSeconds();
-
-		if (Hazel::Input::IsKeyPressed(HZ_KEY_A))
-			m_CameraRotation += m_CameraRotationSpeed * ts.GetSeconds();
-		if (Hazel::Input::IsKeyPressed(HZ_KEY_D))
-			m_CameraRotation -= m_CameraRotationSpeed * ts.GetSeconds();
-		
+		// 相机移动
+		m_CameraController.OnUpdate(ts);
 		//背景颜色
 		Hazel::RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
 		//实行清除功能
 		Hazel::RenderCommand::Clear();
-		//设置相机的位置和旋转角度
-		m_Camera.SetPosition(m_CameraPosition);
-		m_Camera.SetRotation(m_CameraRotation);
 
-		//传递参数并且设置整个场景的渲染开始
-		Hazel::Renderer::BeginScene(m_Camera);
-
+		Hazel::Renderer::BeginScene(m_CameraController.GetCamera());
 		//缩放矩阵
 		glm::mat4 scale = glm::scale(glm::mat4(1.0f), glm::vec3(0.1f));
 
@@ -215,8 +196,9 @@ public:
 		ImGui::End();
     }
 
-    void OnEvent(Hazel::Event& event) override
+    void OnEvent(Hazel::Event& e) override
     {
+		m_CameraController.OnEvent(e);		//这才是实际相机移动逻辑
     }
 
 	private:
@@ -228,13 +210,7 @@ public:
 		Hazel::Ref<Hazel::VertexArray> m_SquareVA;
 		Hazel::Ref<Hazel::Texture2D> m_Texture, m_ChernoLogoTexture;
 
-		Hazel::OrthographicCamera m_Camera;
-		glm::vec3 m_CameraPosition;
-		float m_CameraMoveSpeed = 5.0f;
-
-		float m_CameraRotation = 0.0f;
-		float m_CameraRotationSpeed = 180.0f;
-
+		Hazel::OrthographicCameraController m_CameraController;
 		glm::vec3 m_SquareColor = { 0.2f, 0.3f, 0.8f };	//初始化颜色
 };
 

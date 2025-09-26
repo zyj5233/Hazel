@@ -34,8 +34,8 @@ namespace Hazel {
             : m_XOffset(xOffset), m_YOffset(yOffset) {
         }
 
-        inline float GetXOffset() const { return m_XOffset; }
-        inline float GetYOffset() const { return m_YOffset; }
+        inline float GetXOffset() const { return m_XOffset; }       //水平滚动（一般设置为0）
+        inline float GetYOffset() const { return m_YOffset; }       //垂直滚动
 
         std::string ToString() const override
         {
