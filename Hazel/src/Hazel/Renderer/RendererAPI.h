@@ -14,6 +14,7 @@ namespace Hazel {
 
 	public:
 		virtual void Init() = 0;
+		virtual void SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height) = 0;	//设置视口
 		virtual void SetClearColor(const glm::vec4& color) = 0;	// 设置清除后的颜色
 		virtual void Clear() = 0;								// 清除哪些缓冲
 

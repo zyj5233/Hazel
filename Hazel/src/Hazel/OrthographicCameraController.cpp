@@ -40,6 +40,7 @@ namespace Hazel{
 
 	void OrthographicCameraController::OnEvent(Event& e)
 	{
+		//键盘控制相机移动是单独的onupdata，鼠标缩放和窗口大小是额外的onevent
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<MouseScrolledEvent>(HZ_BIND_EVENT_FN(OrthographicCameraController::OnMouseScrolled));
 		dispatcher.Dispatch<WindowResizeEvent>(HZ_BIND_EVENT_FN(OrthographicCameraController::OnWindowResized));
