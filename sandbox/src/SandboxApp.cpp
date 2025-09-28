@@ -1,10 +1,13 @@
 #include <Hazel.h>
 
+#include <Hazel/Core/EntryPoint.h>
 #include "Platform/OpenGL/OpenGLShader.h"
 #include "imgui/imgui.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+
+#include "Sandbox2D.h"
 
 class ExampleLayer : public Hazel::Layer
 {
@@ -12,7 +15,7 @@ public:
     ExampleLayer()
         : Layer("Example"), m_CameraController(1280.0f / 720.0f)
     {
-		m_VertexArray.reset(Hazel::VertexArray::Create());	////创建三角形vao
+		m_VertexArray = Hazel::VertexArray::Create();	////创建三角形vao
 
 		//模型坐标一般原点都在模型中心
 		float vertices[3 * 7] = {
@@ -42,7 +45,7 @@ public:
 		//-----------------
 		//创建正方形vao
 		//-----------------
-		m_SquareVA.reset(Hazel::VertexArray::Create());
+		m_SquareVA = Hazel::VertexArray::Create();
 
 		float squareVertices[5 * 4] = {
 			-0.5f, -0.5f, 0.0f, 0.0f, 0.0f,
@@ -219,7 +222,7 @@ class Sandbox : public Hazel::Application
 public:
     Sandbox()
     {
-        PushLayer(new ExampleLayer());      //创建一个example的实例压入栈
+        PushLayer(new Sandbox2D());      //创建一个example的实例压入栈
     }
 
     ~Sandbox()

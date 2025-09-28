@@ -19,7 +19,7 @@ namespace Hazel {
 		virtual const std::vector<Ref<VertexBuffer>>& GetVertexBuffers() const = 0;		//获取所有关联的vbo
 		virtual const Ref<IndexBuffer>& GetIndexBuffer() const = 0;		//获取关联的ebo
 
-		static VertexArray* Create();		//静态工厂方法
+		static Ref<VertexArray> Create();		//静态工厂方法
 	};
 
 }
