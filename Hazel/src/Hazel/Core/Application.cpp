@@ -2,11 +2,11 @@
 
 #include "Application.h"
 
-#include "Hazel/Log.h"
+#include "Hazel/Core/Log.h"
 
 #include "Hazel/Renderer/Renderer.h"
 #include "Input.h"
-#include "Core/Timestep.h"
+
 #include <glfw/glfw3.h>
 
 namespace Hazel { 

@@ -1,7 +1,7 @@
 #pragma once
 #include "hzpch.h"      //预编译头文件也能间接包含
 
-#include "Hazel/Core.h"
+#include "Hazel/Core/Core.h"
 
 namespace Hazel {
 
