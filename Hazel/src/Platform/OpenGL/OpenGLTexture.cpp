@@ -38,6 +38,10 @@ namespace Hazel {
 		glTextureParameteri(m_RendererID, GL_TEXTURE_MIN_FILTER, GL_LINEAR);	//缩小过滤/线性插值
 		glTextureParameteri(m_RendererID, GL_TEXTURE_MAG_FILTER, GL_NEAREST);	//放大过滤/最近临插值
 
+		//让纹理重复：s表示水平方向，t表示垂直方向（当纹理坐标超出【0，1】范围时）
+		glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_S, GL_REPEAT);		//注释仍然能工作，因为默认复制
+		glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
 		glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Width, m_Height, dataFormat, GL_UNSIGNED_BYTE, data);	//把图像数据上传上面开辟的GPU纹理空间
 
 		stbi_image_free(data);	//释放由 stbi_load加载的图像数据

@@ -49,9 +49,9 @@ public:
 
 		float squareVertices[5 * 4] = {
 			-0.5f, -0.5f, 0.0f, 0.0f, 0.0f,
-			 0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
-			 0.5f,  1.0f, 0.0f, 1.0f, 1.0f,
-			-0.5f,  1.0f, 0.0f, 0.0f, 1.0f
+			 0.5f, -0.5f, 0.0f, 0.5f, 0.0f,
+			 0.5f,  1.0f, 0.0f, 0.5f, 0.5f,
+			-0.5f,  1.0f, 0.0f, 0.0f, 0.5f
 		};
 
 		Hazel::Ref<Hazel::VertexBuffer> squareVB;
@@ -201,7 +201,7 @@ public:
 
     void OnEvent(Hazel::Event& e) override
     {
-		m_CameraController.OnEvent(e);		//这才是实际相机移动逻辑
+		m_CameraController.OnEvent(e);		
     }
 
 	private:
