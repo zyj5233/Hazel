@@ -31,5 +31,7 @@ namespace Hazel {
 		//触发渲染，一次性只能触发一个物体
 		//三角形绘制/获取索引数量/索引类型/从数据缓冲区开头读取
 		glDrawElements(GL_TRIANGLES, vertexArray->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
+
+		glBindTexture(GL_TEXTURE_2D, 0);	//0表示解除纹理绑定。glBindTexture(GL_TEXTURE_2D, textureID)表示使用textureID
 	}
 }
