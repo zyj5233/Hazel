@@ -84,11 +84,6 @@ namespace Hazel {
         }
     }
 
-    void ImGuiLayer::OnImGuiRender()    //自定义的ImGui渲染接口
-    {
-        static bool show = true;        //确保生命周期
-        ImGui::ShowDemoWindow(&show);   
-    }
 
   
 }
