@@ -9,6 +9,7 @@ namespace Hazel {
 	OpenGLTexture2D::OpenGLTexture2D(uint32_t width, uint32_t height)
 		: m_Width(width), m_Height(height)
 	{
+		HZ_PROFILE_FUNCTION();
 		//默认四通道
 		m_InternalFormat = GL_RGBA8;
 		m_DataFormat = GL_RGBA;
@@ -29,9 +30,14 @@ namespace Hazel {
 	OpenGLTexture2D::OpenGLTexture2D(const std::string& path)
 		: m_Path(path)
 	{
+		HZ_PROFILE_FUNCTION();
 		int width, height, channels;
 		stbi_set_flip_vertically_on_load(1);	//垂直翻转
-		stbi_uc* data = stbi_load(path.c_str(), &width, &height, &channels, 0);	//加载图像文件到内部
+		stbi_uc* data = nullptr;	//加载图像文件到内部
+		{
+			HZ_PROFILE_SCOPE("stbi_load - OpenGLTexture2D::OpenGLTexture2D(const std:string&)");
+			data = stbi_load(path.c_str(), &width, &height, &channels, 0);
+		}
 		HZ_CORE_ASSERT(data, "Failed to load image!");	//是否加载成功/&channels：输出参数，存储图像的通道数（如RGB为3，RGBA为4）
 		m_Width = width;
 		m_Height = height;
@@ -71,11 +77,13 @@ namespace Hazel {
 
 	OpenGLTexture2D::~OpenGLTexture2D()
 	{
+		HZ_PROFILE_FUNCTION();
 		glDeleteTextures(1, &m_RendererID);
 	}
 	//data是指向图像的指针，size是传入数据的总字节数
 	void OpenGLTexture2D::SetData(void* data, uint32_t size)	//将提供的图像数据设置到纹理对象中
 	{
+		HZ_PROFILE_FUNCTION();
 		uint32_t bpp = m_DataFormat == GL_RGBA ? 4 : 3;	//如果是rgba就占四通道，否则三通道
 		HZ_CORE_ASSERT(size == m_Width * m_Height * bpp, "Data must be entire texture!");	//断言传入的图像数据大小是否匹配纹理尺寸
 		glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Width, m_Height, m_DataFormat, GL_UNSIGNED_BYTE, data);	//上传数据到OpenGL纹理
@@ -83,6 +91,7 @@ namespace Hazel {
 
 	void OpenGLTexture2D::Bind(uint32_t slot) const
 	{
+		HZ_PROFILE_FUNCTION();
 		glBindTextureUnit(slot, m_RendererID);
 	}
 }

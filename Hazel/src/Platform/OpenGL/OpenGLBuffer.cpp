@@ -9,6 +9,7 @@ namespace Hazel {
 	//作用就是上传vbo，绑定id
 	OpenGLVertexBuffer::OpenGLVertexBuffer(float* vertices, uint32_t size)
 	{
+		HZ_PROFILE_FUNCTION();
 		glCreateBuffers(1, &m_RendererID);  //创建vbo并获取id
 		glBindBuffer(GL_ARRAY_BUFFER, m_RendererID);	//绑定vbo，	GL_ARRAY_BUFFER表示顶点属性数据（位置、颜色等）
 		//放在构造函数上传数据的目的是：数据上传一次就够了
@@ -17,16 +18,19 @@ namespace Hazel {
 
 	OpenGLVertexBuffer::~OpenGLVertexBuffer()	//删除vbo
 	{
+		HZ_PROFILE_FUNCTION();
 		glDeleteBuffers(1, &m_RendererID);
 	}
 
 	void OpenGLVertexBuffer::Bind() const
 	{
+		HZ_PROFILE_FUNCTION();
 		glBindBuffer(GL_ARRAY_BUFFER, m_RendererID);
 	}	  
 
 	void OpenGLVertexBuffer::Unbind() const
 	{
+		HZ_PROFILE_FUNCTION();
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 
@@ -34,6 +38,7 @@ namespace Hazel {
 	OpenGLIndexBuffer::OpenGLIndexBuffer(uint32_t* indices, uint32_t count)		
 		: m_Count(count)		//索引数量
 	{
+		HZ_PROFILE_FUNCTION();
 		glCreateBuffers(1, &m_RendererID);		//虽然代码相同，但其实这里是创建ibo
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_RendererID);	//GL_ELEMENT_ARRAY_BUFFER存储顶点索引数据
 		//下面不仅指明了数据的总字节和指针，还说明了数据类型uint32_t
@@ -42,17 +47,20 @@ namespace Hazel {
 
 	OpenGLIndexBuffer::~OpenGLIndexBuffer()
 	{
+		HZ_PROFILE_FUNCTION();
 		glDeleteBuffers(1, &m_RendererID);
 	}
 
 	//bind用于切换渲染对象
 	void OpenGLIndexBuffer::Bind() const		//不改成员变量，即不会改变m_RendererID
 	{
+		HZ_PROFILE_FUNCTION();
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_RendererID);
 	}
 
 	void OpenGLIndexBuffer::Unbind() const
 	{
+		HZ_PROFILE_FUNCTION();
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	}
 

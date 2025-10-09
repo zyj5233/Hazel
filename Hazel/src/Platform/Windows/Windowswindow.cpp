@@ -23,16 +23,19 @@ namespace Hazel {
 
     WindowsWindow::WindowsWindow(const WindowProps& props)
     {
+        HZ_PROFILE_FUNCTION();
         Init(props);
     }
 
     WindowsWindow::~WindowsWindow()
     {
+        HZ_PROFILE_FUNCTION();
         Shutdown();
     }
 
     void WindowsWindow::Init(const WindowProps& props)
     {
+        HZ_PROFILE_FUNCTION();
         m_Data.Title = props.Title;
         m_Data.Width = props.Width;
         m_Data.Height = props.Height;
@@ -41,6 +44,7 @@ namespace Hazel {
 
         if (!s_GLFWInitialized)     //检查是否初始化
         {
+            HZ_PROFILE_FUNCTION();
             // TODO: glfwTerminate on system shutdown
             int success = glfwInit();       //初始化函数
             HZ_CORE_ASSERT(success, "Could not intialize GLFW!");
@@ -50,7 +54,11 @@ namespace Hazel {
         }
 
         // 创建窗口，控制鼠标移动等具体细节
-        m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, m_Data.Title.c_str(), nullptr, nullptr);
+        {
+            HZ_PROFILE_SCOPE("glfwCreateWindow");
+            m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, m_Data.Title.c_str(), nullptr, nullptr);
+            //++s_GLFWWindowCount;
+        }
 
         m_Context = new OpenGLContext(m_Window);
         m_Context->Init();
@@ -151,11 +159,13 @@ namespace Hazel {
 
     void WindowsWindow::Shutdown()
     {
+        HZ_PROFILE_FUNCTION();
         glfwDestroyWindow(m_Window);
     }
 
     void WindowsWindow::OnUpdate()
     {
+        HZ_PROFILE_FUNCTION();
         glfwPollEvents();               // 异步调用注册的回调，包括子层
         m_Context->SwapBuffers();      // 显示画面
     }

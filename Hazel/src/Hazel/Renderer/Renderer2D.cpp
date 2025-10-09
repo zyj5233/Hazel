@@ -20,6 +20,7 @@ namespace Hazel {
 
 	void Renderer2D::Init()
 	{
+		HZ_PROFILE_FUNCTION();
 		s_Data = new Renderer2DStorage();
 		s_Data->QuadVertexArray = VertexArray::Create();
 
@@ -58,11 +59,13 @@ namespace Hazel {
 
 	void Renderer2D::Shutdown()
 	{
+		HZ_PROFILE_FUNCTION();
 		delete s_Data;
 	}
 
 	void Renderer2D::BeginScene(const OrthographicCamera& camera)
 	{
+		HZ_PROFILE_FUNCTION();
 		s_Data->TextureShader->Bind();
 		s_Data->TextureShader->SetMat4("u_ViewProjection", camera.GetViewProjectionMatrix());
 
@@ -70,17 +73,19 @@ namespace Hazel {
 
 	void Renderer2D::EndScene()
 	{
-
+		HZ_PROFILE_FUNCTION();
 	}
 
 	void Renderer2D::DrawQuad(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color)
 	{
+
 		DrawQuad({ position.x, position.y, 0.0f }, size, color);
 	}
 
 	//纯色着色器的DrawQuad/position表示位置，size表示xy的缩放比例
 	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color)
 	{
+		HZ_PROFILE_FUNCTION();
 		//纹理着色器
 		s_Data->TextureShader->SetFloat4("u_Color", color);
 		//纯白纹理对象/乘以纯白不改变颜色
@@ -102,6 +107,7 @@ namespace Hazel {
 	//为了开启深度，未来可扩展到3D，前面也一样
 	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const Ref<Texture2D>& texture)
 	{
+		HZ_PROFILE_FUNCTION();
 		s_Data->TextureShader->SetFloat4("u_Color", glm::vec4(1.0f));	//单位向量表示不改变颜色
 		texture->Bind();
 

@@ -23,6 +23,7 @@ namespace Hazel {
 
     void ImGuiLayer::OnAttach()
     {
+        HZ_PROFILE_FUNCTION();
         // 验证ImGui头文件与编译链接的库版本是否匹配
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
@@ -55,6 +56,7 @@ namespace Hazel {
 
     void ImGuiLayer::OnDetach()     //清除
     {
+        HZ_PROFILE_FUNCTION();
         ImGui_ImplOpenGL3_Shutdown();
         ImGui_ImplGlfw_Shutdown();
         ImGui::DestroyContext();
@@ -62,6 +64,7 @@ namespace Hazel {
 
     void ImGuiLayer::Begin()        //准备帧
     {
+        HZ_PROFILE_FUNCTION();
         ImGui_ImplOpenGL3_NewFrame();   //重置渲染状态
         ImGui_ImplGlfw_NewFrame();      //处理输入事件
         ImGui::NewFrame();              //创建新的imgui上下文
@@ -69,6 +72,7 @@ namespace Hazel {
 
     void ImGuiLayer::End()          //渲染帧
     {
+        HZ_PROFILE_FUNCTION();
         ImGuiIO& io = ImGui::GetIO();
         Application& app = Application::Get();
         io.DisplaySize = ImVec2((float)app.GetWindow().GetWidth(), (float)app.GetWindow().GetHeight());

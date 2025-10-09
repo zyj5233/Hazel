@@ -12,6 +12,7 @@ namespace Hazel{
 
 	void OrthographicCameraController::OnUpdate(Timestep ts)
 	{
+		HZ_PROFILE_FUNCTION();
 		//实际移动的是相机m_CameraTranslationSpeed
 		if (Input::IsKeyPressed(HZ_KEY_A))
 			m_CameraPosition.x -= m_CameraTranslationSpeed * ts.GetSeconds();
@@ -40,6 +41,7 @@ namespace Hazel{
 
 	void OrthographicCameraController::OnEvent(Event& e)
 	{
+		HZ_PROFILE_FUNCTION();
 		//键盘控制相机移动是单独的onupdata，鼠标缩放和窗口大小是额外的onevent
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<MouseScrolledEvent>(HZ_BIND_EVENT_FN(OrthographicCameraController::OnMouseScrolled));
@@ -48,6 +50,7 @@ namespace Hazel{
 
 	bool OrthographicCameraController::OnMouseScrolled(MouseScrolledEvent& e)
 	{
+		HZ_PROFILE_FUNCTION();
 		m_ZoomLevel -= e.GetYOffset() * 0.25f;	//改变缩放大小
 		m_ZoomLevel = std::max(m_ZoomLevel, 0.25f);		//保证最小缩放等级
 		m_Camera.SetProjection(-m_AspectRatio * m_ZoomLevel, m_AspectRatio * m_ZoomLevel, -m_ZoomLevel, m_ZoomLevel);
@@ -56,6 +59,7 @@ namespace Hazel{
 
 	bool OrthographicCameraController::OnWindowResized(WindowResizeEvent& e)
 	{
+		HZ_PROFILE_FUNCTION();
 		m_AspectRatio = (float)e.GetWidth() / (float)e.GetHeight();
 		m_Camera.SetProjection(-m_AspectRatio * m_ZoomLevel, m_AspectRatio * m_ZoomLevel, -m_ZoomLevel, m_ZoomLevel);
 		return false;
